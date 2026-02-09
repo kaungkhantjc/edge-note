@@ -6,6 +6,7 @@ import { Form, redirect, useNavigation } from "react-router";
 import { requireAuth } from "../services/session.server";
 import { getDB } from "../services/db.server";
 import { notes } from "../drizzle/schema";
+import { useResolvedTheme } from "../hooks/useResolvedTheme";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
     await requireAuth(request, context.cloudflare.env);
@@ -43,6 +44,7 @@ export default function NewNote() {
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting";
     const [isPreviewEnabled, setIsPreviewEnabled] = useState(true);
+    const resolvedTheme = useResolvedTheme();
 
     useEffect(() => {
         const checkMobile = () => {
@@ -55,11 +57,11 @@ export default function NewNote() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
-            <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-                <h1 className="text-xl font-bold text-gray-800">New Note</h1>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col">
+            <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+                <h1 className="text-xl font-bold text-gray-800 dark:text-white">New Note</h1>
                 <div className="flex items-center gap-3">
-                    <a href="/" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors">
+                    <a href="/" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                         Cancel
                     </a>
                     <button
@@ -77,35 +79,35 @@ export default function NewNote() {
                 <Form method="post" id="new-note-form" className="flex flex-col gap-6 h-full">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="md:col-span-2 space-y-2">
-                            <label htmlFor="title" className="block text-sm font-medium text-gray-700">Title</label>
+                            <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
                             <input
                                 type="text"
                                 name="title"
                                 id="title"
                                 required
                                 placeholder="Note Title"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow"
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-shadow"
                             />
                         </div>
                         <div className="space-y-2">
-                            <label htmlFor="slug" className="block text-sm font-medium text-gray-700">Slug (Optional)</label>
+                            <label htmlFor="slug" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Slug (Optional)</label>
                             <input
                                 type="text"
                                 name="slug"
                                 id="slug"
                                 placeholder="custom-slug"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow"
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-shadow"
                             />
                         </div>
                     </div>
 
-                    <div className="flex-1 min-h-[500px] border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white">
+                    <div className="flex-1 min-h-125 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm bg-white dark:bg-gray-800">
                         <input type="hidden" name="content" value={content} />
                         <MdEditor
-                            key={isPreviewEnabled ? 'preview-enabled' : 'preview-disabled'}
+                            key={`editor-${resolvedTheme}-${isPreviewEnabled}`}
                             value={content}
                             onChange={setContent}
-                            theme="light"
+                            theme={resolvedTheme}
                             language="en-US"
                             className="h-full"
                             preview={isPreviewEnabled}

@@ -56,8 +56,8 @@ export function NoteCard({ note, selected, isSelectionMode, onClick, onLongPress
             id={`note-card-${note.id}`}
             className={`note-card group relative p-4 rounded-xl border transition-all duration-200 cursor-pointer 
         ${selected
-                    ? 'bg-blue-50 border-blue-500 shadow-md transform scale-[1.02]'
-                    : 'bg-white p-4 rounded-xl border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-500 shadow-md transform scale-[1.02]'
+                    : 'bg-white dark:bg-gray-800 p-4 rounded-xl border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm'
                 }
 select-none touch-manipulation
     `}
@@ -67,7 +67,7 @@ select-none touch-manipulation
             onTouchMove={handleTouchMove}
         >
             <div className="flex justify-between items-start mb-2">
-                <h3 className={`font-semibold text-lg line-clamp-1 ${selected ? 'text-blue-700' : 'text-gray-900'} `}>
+                <h3 className={`font-semibold text-lg line-clamp-1 ${selected ? 'text-blue-700 dark:text-blue-400' : 'text-gray-900 dark:text-white'} `}>
                     {note.title}
                 </h3>
                 {selected && (
@@ -83,16 +83,16 @@ select-none touch-manipulation
                     </div>
                 )}
             </div>
-            <p className="text-gray-500 text-sm line-clamp-3 mb-3">
+            <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-3 mb-3">
                 {note.excerpt}
             </p>
-            <div className="text-xs text-gray-400 font-medium">
+            <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">
                 {new Date(note.date).toLocaleDateString()}
             </div>
 
             {/* Overlay for selection effect */}
             <div className={`absolute inset-0 rounded-xl transition-colors pointer-events-none 
-         ${selected ? 'bg-blue-500/5' : 'group-hover:bg-gray-50/50'}
+         ${selected ? 'bg-blue-500/5' : 'group-hover:bg-gray-50/50 dark:group-hover:bg-gray-700/50'}
 `} />
         </div>
     );

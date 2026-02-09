@@ -59,27 +59,27 @@ export function NoteList({ notes, selection, containerRef }: NoteListProps) {
     };
 
     return (
-        <div className="flex flex-col h-screen w-full bg-gray-50">
+        <div className="flex flex-col h-screen w-full bg-gray-50 dark:bg-gray-950">
 
             {/* Toolbar - Only visible in Selection Mode */}
             {isSelectionMode && (
-                <div className="sticky top-0 z-50 bg-white border-b border-gray-200 px-4 py-3 shadow-sm flex items-center justify-between animate-in slide-in-from-top-2 duration-200">
+                <div className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 shadow-sm flex items-center justify-between animate-in slide-in-from-top-2 duration-200">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={clearSelection}
-                            className="p-2 hover:bg-gray-100 rounded-full text-gray-600 transition-colors"
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full text-gray-600 dark:text-gray-400 transition-colors"
                             aria-label="Cancel selection"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
-                        <span className="font-medium text-gray-900 border-l border-gray-300 pl-4">
+                        <span className="font-medium text-gray-900 dark:text-white border-l border-gray-300 dark:border-gray-700 pl-4">
                             {selectedIds.size} selected
                         </span>
                         <button
                             onClick={selectAll}
-                            className="text-sm text-blue-600 hover:text-blue-800 font-medium px-3 py-1 bg-blue-50 rounded"
+                            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium px-3 py-1 bg-blue-50 dark:bg-blue-900/30 rounded"
                         >
                             Select All
                         </button>
@@ -89,7 +89,7 @@ export function NoteList({ notes, selection, containerRef }: NoteListProps) {
                         <button
                             onClick={handleDelete}
                             disabled={selectedIds.size === 0}
-                            className="p-2 hover:bg-red-50 text-red-600 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Delete selected"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

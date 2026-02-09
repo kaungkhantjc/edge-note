@@ -4,6 +4,7 @@ import { NoteList } from "../components/NoteList";
 import { getDB } from "../services/db.server";
 import { notes } from "../drizzle/schema";
 import { desc, inArray, like } from "drizzle-orm";
+import { ThemeToggle } from "../components/theme-toggle";
 import { data, Form, useSubmit } from "react-router";
 
 export function meta({ }: Route.MetaArgs) {
@@ -86,10 +87,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     <>
       {/* Hide Search Toolbar when in Selection Mode */}
       {!isSelectionMode && (
-        <div className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 py-3.5 shadow-sm flex items-center justify-between">
+        <div className="sticky top-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-3.5 shadow-sm flex items-center justify-between">
           <Form method="get" action="/" className="flex-1 max-w-lg relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
               </svg>
             </div>
@@ -98,7 +99,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               name="q"
               defaultValue={loaderData.q}
               placeholder="Search notes..."
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md leading-5 bg-white dark:bg-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 dark:focus:placeholder-gray-500 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               onChange={(e) => {
                 const isFirstSearch = loaderData.q === null;
                 submit(e.currentTarget.form, {
@@ -113,6 +114,11 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             <a href="/new" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
               Create Note
             </a>
+          </div>
+
+          {/* Theme Toggle */}
+          <div className="hidden md:block ml-4 relative z-50">
+            <ThemeToggle />
           </div>
         </div>
       )}

@@ -37,17 +37,66 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+import { ThemeProvider } from "./components/theme-provider";
+import { useRouteLoaderData } from "react-router";
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const cookieHeader = request.headers.get("Cookie");
+  const themeMatch = cookieHeader?.match(/theme-preference=([^;]+)/);
+  const theme = (themeMatch?.[1] as "light" | "dark" | "system") || "system";
+  return { theme };
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
+  const data = useRouteLoaderData<typeof loader>("root");
+  const initialTheme = data?.theme || "system";
+
+  const themeScript = `
+    (function() {
+      try {
+        var storageKey = 'theme-preference';
+        var theme = 'system';
+        var cookieMatch = document.cookie.match(new RegExp('(^| )' + storageKey + '=([^;]+)'));
+        if (cookieMatch) {
+          theme = cookieMatch[2];
+        } else {
+          var local = localStorage.getItem(storageKey);
+          if (local) theme = local;
+        }
+
+        function applyTheme(t) {
+          var root = document.documentElement;
+          if (t === 'dark') {
+            root.classList.add('dark');
+          } else if (t === 'light') {
+            root.classList.remove('dark');
+          } else {
+            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+              root.classList.add('dark');
+            } else {
+              root.classList.remove('dark');
+            }
+          }
+        }
+        
+        applyTheme(theme);
+      } catch (e) {}
+    })();
+  `;
+
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <Meta />
         <Links />
       </head>
       <body>
-        {children}
+        <ThemeProvider specifiedTheme={initialTheme}>
+          {children}
+        </ThemeProvider>
         <ScrollRestoration />
         <Scripts />
       </body>
