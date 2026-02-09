@@ -7,6 +7,7 @@ import { AppBar } from "./ui/AppBar";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { useResolvedTheme } from "../hooks/useResolvedTheme";
+import { ThemeToggle } from "./theme-toggle";
 
 interface NoteEditorLayoutProps {
     title: string;
@@ -52,6 +53,7 @@ export function NoteEditorLayout({
                 }
                 endAction={
                     <div className="flex items-center gap-2">
+                        <ThemeToggle />
                         <Link to={backLink} className="hidden md:block">
                             <Button variant="text">Cancel</Button>
                         </Link>

@@ -11,6 +11,7 @@ import { useResolvedTheme } from "../hooks/useResolvedTheme";
 import { getDB } from "../services/db.server";
 import { requireAuth } from "../services/session.server";
 import type { Route } from "./+types/note-view";
+import { ThemeToggle } from "../components/theme-toggle";
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data || !data.note) {
@@ -84,6 +85,7 @@ export default function NoteView({ loaderData }: Route.ComponentProps) {
                 }
                 endAction={
                     <div className="flex items-center gap-1">
+                        <ThemeToggle />
                         {/* Desktop Actions */}
                         <div className="hidden md:flex gap-2">
                             <Link to={`/${note.id}/edit`}>

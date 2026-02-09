@@ -113,7 +113,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           title={
             <div className="flex gap-2 items-center">
               <img src="/favicon.svg" alt="Edge Note" className="h-8 w-8" />
-              <span className="font-bold text-2xl tracking-tight text-primary hidden md:block">Edge Note</span>
+              <span className="font-bold text-2xl tracking-tight text-primary">Edge Note</span>
             </div>
           }
           startAction={null}
@@ -164,8 +164,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
       {/* FAB */}
       {!isSelectionMode && (
-        <Link to="/new" className="fixed bottom-6 right-6 z-40">
-          <button className="h-16 w-16 rounded-2xl bg-primary-container text-on-primary-container shadow-2 hover:shadow-3 transition-all duration-300 flex items-center justify-center group active:scale-95">
+        <Link to="/new" className="fixed bottom-7 right-7 z-40">
+          <button className="h-16 w-16 rounded-2xl bg-primary-container text-on-primary-container shadow-md hover:shadow-3 transition-all duration-300 flex items-center justify-center group active:scale-95">
             <Plus className="w-8 h-8 group-hover:rotate-90 transition-transform duration-300" />
           </button>
         </Link>
