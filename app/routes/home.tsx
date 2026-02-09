@@ -6,7 +6,9 @@ import { notes } from "../drizzle/schema";
 import { desc, inArray, like } from "drizzle-orm";
 import { ThemeToggle } from "../components/theme-toggle";
 import { data, Form, useSubmit } from "react-router";
-import { LogOut } from "lucide-react";
+import { LogOut, EllipsisVertical, Sun, Moon, Laptop } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useTheme } from "../components/theme-provider";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -83,6 +85,20 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   });
 
   const { isSelectionMode } = selection;
+  const { setTheme, theme } = useTheme();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setIsMobileMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <>
@@ -135,6 +151,54 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 <LogOut className="h-5 w-5" />
               </button>
             </Form>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden relative ml-2" ref={mobileMenuRef}>
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Menu"
+            >
+              <EllipsisVertical className="h-6 w-6 text-gray-600 dark:text-gray-400" />
+            </button>
+
+            {isMobileMenuOpen && (
+              <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 py-1 z-50 animate-in fade-in zoom-in duration-100 origin-top-right">
+                <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Theme
+                </div>
+                <button
+                  onClick={() => { setTheme("light"); setIsMobileMenuOpen(false); }}
+                  className={`flex items-center w-full px-4 py-2.5 text-sm ${theme === "light" ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50"}`}
+                >
+                  <Sun className="h-4 w-4 mr-3" /> Light
+                </button>
+                <button
+                  onClick={() => { setTheme("dark"); setIsMobileMenuOpen(false); }}
+                  className={`flex items-center w-full px-4 py-2.5 text-sm ${theme === "dark" ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50"}`}
+                >
+                  <Moon className="h-4 w-4 mr-3" /> Dark
+                </button>
+                <button
+                  onClick={() => { setTheme("system"); setIsMobileMenuOpen(false); }}
+                  className={`flex items-center w-full px-4 py-2.5 text-sm ${theme === "system" ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50"}`}
+                >
+                  <Laptop className="h-4 w-4 mr-3" /> System
+                </button>
+
+                <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+
+                <Form action="/logout" method="post">
+                  <button
+                    type="submit"
+                    className="flex items-center w-full px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4 mr-3" /> Logout
+                  </button>
+                </Form>
+              </div>
+            )}
           </div>
         </div>
       )}
