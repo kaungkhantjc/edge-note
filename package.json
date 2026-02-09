@@ -12,6 +12,7 @@
 		"typecheck": "npm run cf-typegen && react-router typegen && tsc -b"
 	},
 	"dependencies": {
+		"@codemirror/view": "^6.39.13",
 		"drizzle-kit": "0.31.8",
 		"drizzle-orm": "0.45.1",
 		"iron-session": "^8.0.4",

@@ -1,6 +1,6 @@
 import { MdEditor } from "md-editor-rt";
 import "md-editor-rt/lib/style.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Form, redirect, useNavigation } from "react-router";
 import type { Route } from "./+types/note-edit";
 import { requireAuth } from "../services/session.server";
@@ -64,6 +64,17 @@ export default function EditNote({ loaderData }: Route.ComponentProps) {
     const [content, setContent] = useState(note.content);
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting";
+    const [isPreviewEnabled, setIsPreviewEnabled] = useState(true);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            // If width is less than 768px (md breakpoint), disable preview
+            setIsPreviewEnabled(window.innerWidth >= 768);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -116,15 +127,50 @@ export default function EditNote({ loaderData }: Route.ComponentProps) {
                         </div>
                     </div>
 
-                    <div className="flex-1 min-h-[500px] border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white">
+                    <div className="flex-1 min-h-125 border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white">
                         <input type="hidden" name="content" value={content} />
                         <MdEditor
-                            modelValue={content}
+                            key={isPreviewEnabled ? 'preview-enabled' : 'preview-disabled'}
+                            value={content}
                             onChange={setContent}
+                            theme="light"
                             language="en-US"
                             className="h-full"
+                            preview={isPreviewEnabled}
+                            noPrettier={false}
+                            noUploadImg={true}
+                            inputBoxWidth="60%"
                             toolbars={[
-                                'bold', 'underline', 'italic', '-', 'title', 'strikeThrough', 'sub', 'sup', 'quote', 'unorderedList', 'orderedList', 'task', '-', 'codeRow', 'code', 'link', 'image', 'table', 'mermaid', 'katex', '-', 'revoke', 'next', 'save', '=', 'pageFullscreen', 'fullscreen', 'preview', 'htmlPreview', 'catalog', 'github'
+                                'bold',
+                                'underline',
+                                'italic',
+                                '-',
+                                'strikeThrough',
+                                'sub',
+                                'sup',
+                                'quote',
+                                'unorderedList',
+                                'orderedList',
+                                'task',
+                                '-',
+                                'codeRow',
+                                'code',
+                                'link',
+                                'image',
+                                'table',
+                                'mermaid',
+                                'katex',
+                                '-',
+                                'revoke',
+                                'next',
+                                'save',
+                                '=',
+                                'pageFullscreen',
+                                'fullscreen',
+                                'preview',
+                                'previewOnly',
+                                'htmlPreview',
+                                'catalog'
                             ]}
                         />
                     </div>

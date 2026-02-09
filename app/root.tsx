@@ -9,6 +9,20 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { config } from "md-editor-rt";
+import { lineNumbers } from '@codemirror/view';
+
+config({
+  codeMirrorExtensions(extensions, _options) {
+    return [
+      ...extensions,
+      {
+        type: 'lineNumbers',
+        extension: lineNumbers()
+      }
+    ];
+  }
+});
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
