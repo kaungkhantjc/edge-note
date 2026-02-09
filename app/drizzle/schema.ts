@@ -15,4 +15,5 @@ export const notes = sqliteTable("notes", {
     ),
 }, (table) => [
     index("title_idx").on(table.title),
+    index("created_at_idx").on(table.createdAt),
 ]);

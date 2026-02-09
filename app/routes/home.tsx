@@ -1,18 +1,18 @@
-import type { Route } from "./+types/home";
-import { requireAuth } from "../services/session.server";
+import { desc, inArray, like, or } from "drizzle-orm";
+import { LogOut, Plus } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import { data, Form, Link, useSubmit } from "react-router";
 import { NoteList } from "../components/NoteList";
-import { getDB } from "../services/db.server";
-import { notes } from "../drizzle/schema";
-import { desc, inArray, like } from "drizzle-orm";
-import { ThemeToggle } from "../components/theme-toggle";
-import { data, Form, useSubmit, Link } from "react-router";
-import { LogOut, Plus, Search } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
 import { useTheme } from "../components/theme-provider";
-import { useSelectionMode } from '../hooks/useSelection';
+import { ThemeToggle } from "../components/theme-toggle";
+import { AppBar } from "../components/ui/AppBar";
 import { Button } from "../components/ui/Button";
 import { SearchBar } from "../components/ui/Input";
-import { AppBar } from "../components/ui/AppBar";
+import { notes } from "../drizzle/schema";
+import { useSelectionMode } from '../hooks/useSelection';
+import { getDB } from "../services/db.server";
+import { requireAuth } from "../services/session.server";
+import type { Route } from "./+types/home";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -27,14 +27,16 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const q = url.searchParams.get("q");
 
-  let query = db.select().from(notes).orderBy(desc(notes.createdAt));
+  let query = db.select().from(notes).$dynamic();
 
   if (q) {
-    // @ts-ignore
-    query = db.select().from(notes).where(like(notes.title, `%${q}%`)).orderBy(desc(notes.createdAt));
+    query = query.where(or(
+      like(notes.title, `%${q}%`),
+      like(notes.content, `%${q}%`)
+    ));
   }
 
-  const allNotes = await query;
+  const allNotes = await query.orderBy(desc(notes.createdAt));
 
   return {
     notes: allNotes.map(n => ({
@@ -86,22 +88,25 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   });
 
   const { isSelectionMode } = selection;
-  const { setTheme, theme } = useTheme(); // You might want to update ThemeToggle to use Button too, or just leave it.
+  // Search handler state and debounce
+  const [q, setQ] = useState(loaderData.q || "");
 
-  // Search handler
+  useEffect(() => {
+    // Skip the first render if q matches loaderData.q
+    if (q === loaderData.q) return;
+
+    const timer = setTimeout(() => {
+      submit(
+        { q },
+        { replace: loaderData.q !== "" }
+      );
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [q, submit, loaderData.q]);
+
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const isFirstSearch = loaderData.q === null;
-    submit(e.currentTarget.form, {
-      replace: !isFirstSearch,
-    });
-  };
-
-  const clearSearch = () => {
-    // Create a form, or just submit empty q
-    // Because useSubmit usually works with a form element, we can't easily submit without one unless we construct FormData.
-    // But we are inside a Form! We can just set input value to "" and submit.
-    // Best way: URL param change.
-    window.location.search = "";
+    setQ(e.target.value);
   };
 
   return (
@@ -123,10 +128,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 <Form method="get" action="/">
                   <SearchBar
                     name="q"
-                    defaultValue={loaderData.q}
+                    value={q}
                     placeholder="Search your notes"
                     onChange={handleSearch}
-                    onClear={() => window.location.href = "/"}
+                    onClear={() => setQ("")}
                   />
                 </Form>
               </div>
@@ -147,9 +152,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             <Form method="get" action="/">
               <SearchBar
                 name="q"
-                defaultValue={loaderData.q}
+                value={q}
                 placeholder="Search notes"
                 onChange={handleSearch}
+                onClear={() => setQ("")}
               />
             </Form>
           </div>
