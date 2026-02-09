@@ -15,7 +15,7 @@
 	},
 	"compatibility_flags": [
 		"nodejs_compat"
-	]
+	],
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
@@ -37,4 +37,11 @@
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
 	 */
 	// "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "edge-note-db",
+			"database_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+		}
+	]
 }

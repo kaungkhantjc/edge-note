@@ -12,6 +12,8 @@
 		"typecheck": "npm run cf-typegen && react-router typegen && tsc -b"
 	},
 	"dependencies": {
+		"drizzle-kit": "0.31.8",
+		"drizzle-orm": "0.45.1",
 		"isbot": "^5.1.31",
 		"react": "^19.1.1",
 		"react-dom": "^19.1.1",
