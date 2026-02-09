@@ -55,7 +55,7 @@ export function NoteList({ notes, selection, containerRef }: NoteListProps) {
 
             {/* Selection Toolbar */}
             {isSelectionMode && (
-                <div className="sticky top-0 z-50 bg-surface-container/90 backdrop-blur-md px-4 py-2 border-b border-outline-variant/20 shadow-sm flex items-center justify-between animate-in slide-in-from-top-2 duration-200">
+                <div className="sticky top-0 z-50 bg-surface-container/90 backdrop-blur-md px-4 py-4 border-b border-outline-variant/20 shadow-sm flex items-center justify-between animate-in slide-in-from-top-2 duration-200">
                     <div className="flex items-center gap-4">
                         <Button
                             variant="icon"

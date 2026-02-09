@@ -41,7 +41,6 @@ export function NoteCard({
             longPressTimer.current = null;
         }
         if (isLongPressing.current) {
-            // Prevent click if long pressed
             e.preventDefault();
         }
     }, []);
@@ -53,17 +52,56 @@ export function NoteCard({
         }
     }, []);
 
+    const handleMouseDown = useCallback((e: React.MouseEvent) => {
+        if (e.button !== 0) return; // Only left click
+        isLongPressing.current = false;
+        longPressTimer.current = setTimeout(() => {
+            isLongPressing.current = true;
+            onLongPress(note);
+        }, 500);
+    }, [note, onLongPress]);
+
+    const handleMouseUp = useCallback(() => {
+        if (longPressTimer.current) {
+            clearTimeout(longPressTimer.current);
+            longPressTimer.current = null;
+        }
+    }, []);
+
+    const handleMouseMove = useCallback(() => {
+        if (longPressTimer.current) {
+            clearTimeout(longPressTimer.current);
+            longPressTimer.current = null;
+        }
+    }, []);
+
+    const handleClick = useCallback((e: React.MouseEvent) => {
+        if (isLongPressing.current) {
+            e.preventDefault();
+            e.stopPropagation();
+            isLongPressing.current = false;
+            return;
+        }
+        onClick(note);
+    }, [note, onClick]);
+
     return (
         <div
             id={`note-card-${note.id}`}
             className={cn(
-                "group relative flex flex-col p-5 h-56 transition-all duration-300 rounded-[24px] cursor-pointer overflow-hidden border border-transparent touch-manipulation select-none",
+                "group relative flex flex-col p-5 h-56 transition-all duration-300 rounded-3xl cursor-pointer overflow-hidden border border-transparent touch-manipulation select-none",
+                "note-card", // Added for event target identification if needed
                 selected
                     ? "bg-secondary-container text-on-secondary-container ring-2 ring-primary border-primary"
                     : "bg-surface-container-high hover:bg-surface-container hover:shadow-md text-on-surface border-none",
                 className
             )}
-            onClick={() => onClick(note)}
+            onClick={handleClick}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseUp}
+            onContextMenu={(e) => e.preventDefault()}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             onTouchMove={handleTouchMove}
@@ -81,7 +119,7 @@ export function NoteCard({
                 )}
             </div>
 
-            <p className={cn("text-base leading-relaxed line-clamp-4 flex-grow font-normal", selected ? "text-on-secondary-container/80" : "text-on-surface-variant")}>
+            <p className={cn("text-base leading-relaxed line-clamp-4 grow font-normal", selected ? "text-on-secondary-container/80" : "text-on-surface-variant")}>
                 {note.excerpt || "No additional text"}
             </p>
 
