@@ -145,7 +145,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             <Form action="/logout" method="post">
               <button
                 type="submit"
-                className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-3 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-neutral-50 hover:text-neutral-700 hover:border-neutral-200 focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-neutral-900/20 dark:hover:text-neutral-400 dark:hover:border-neutral-900/30 transition-all active:scale-95"
+                className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-3 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-neutral-50 hover:text-neutral-700 hover:border-neutral-200 focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-neutral-900/20 dark:hover:text-neutral-400 dark:hover:border-neutral-900/30"
                 title="Logout"
               >
                 <LogOut className="h-5 w-5" />

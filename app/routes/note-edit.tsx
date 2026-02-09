@@ -1,13 +1,23 @@
 import { MdEditor } from "md-editor-rt";
 import "md-editor-rt/lib/style.css";
 import { useState, useEffect } from "react";
-import { Form, redirect, useNavigation } from "react-router";
+import { Form, redirect, useNavigation, Link } from "react-router";
 import type { Route } from "./+types/note-edit";
 import { requireAuth } from "../services/session.server";
 import { getDB } from "../services/db.server";
 import { notes } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { useResolvedTheme } from "../hooks/useResolvedTheme";
+
+export function meta({ data }: Route.MetaArgs) {
+    if (!data || !data.note) {
+        return [{ title: "Note Not Found - Edge Note" }];
+    }
+    return [
+        { title: `Editing: ${data.note.title} - Edge Note` },
+        { name: "description", content: `Editing note: ${data.note.title}` },
+    ];
+}
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
     await requireAuth(request, context.cloudflare.env);
@@ -80,21 +90,31 @@ export default function EditNote({ loaderData }: Route.ComponentProps) {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col">
-            <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+            <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 flex items-center justify-between px-4 py-3.5 shadow-sm">
                 <div className="flex items-center gap-4">
-                    <h1 className="text-xl font-bold text-gray-800 dark:text-white">Edit Note</h1>
-                    <span className="text-gray-400 dark:text-gray-500 text-sm">#{note.id}</span>
+                    <Link to={`/${note.id}`} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-500 dark:text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                    </Link>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-xl font-bold text-gray-800 dark:text-white">Edit Note</h1>
+                        <span className="text-gray-400 dark:text-gray-500 text-sm hidden sm:inline">#{note.id}</span>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <a href={`/${note.id}`} className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <Link
+                        to={`/${note.id}`}
+                        className="hidden md:inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-3 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-neutral-50 hover:text-neutral-700 hover:border-neutral-200 focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-neutral-900/20 dark:hover:text-neutral-400 dark:hover:border-neutral-900/30"
+                    >
                         Cancel
-                    </a>
+                    </Link>
                     <button
                         form="edit-note-form"
                         type="submit"
                         disabled={isSubmitting}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium shadow-sm transition-colors disabled:opacity-50"
+                        className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-3 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-neutral-50 hover:text-neutral-700 hover:border-neutral-200 focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-neutral-900/20 dark:hover:text-neutral-400 dark:hover:border-neutral-900/30 disabled:opacity-50"
                     >
                         {isSubmitting ? "Saving..." : "Save Changes"}
                     </button>
