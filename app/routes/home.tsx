@@ -1,20 +1,19 @@
 import type { Route } from "./+types/home";
-import { Welcome } from "../welcome/welcome";
-
 import { requireAuth } from "../services/session.server";
+import { NoteList } from "../components/NoteList";
 
 export function meta({ }: Route.MetaArgs) {
   return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
+    { title: "Edge Note" },
+    { name: "description", content: "A secure, edge-based note taking app." },
   ];
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   await requireAuth(request, context.cloudflare.env);
-  return { message: context.cloudflare.env.VALUE_FROM_CLOUDFLARE };
+  return {};
 }
 
-export default function Home({ loaderData }: Route.ComponentProps) {
-  return <Welcome message={loaderData.message} />;
+export default function Home() {
+  return <NoteList />;
 }
