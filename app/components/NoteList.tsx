@@ -1,17 +1,24 @@
-import { useRef, useCallback, useState } from 'react';
+import { useCallback, useRef } from 'react';
+import { useSubmit } from 'react-router';
 import { useSelectionMode } from '../hooks/useSelection';
-import { NoteCard, type Note } from './NoteCard';
+import { NoteCard } from './NoteCard';
 
-const DUMMY_NOTES: Note[] = Array.from({ length: 12 }, (_, i) => ({
-    id: `note-${i + 1}`,
-    title: `Project Idea ${i + 1}`,
-    excerpt: `This is a sample note about project idea ${i + 1}. It contains some random text to fill up the space and make it look like a real note content.`,
-    date: new Date(Date.now() - i * 86400000).toISOString(),
-}));
+// Make Note type match Drizzle schema (partially, for UI)
+export interface Note {
+    id: number; // Changed from string to number to match DB
+    title: string;
+    excerpt: string;
+    date: string;
+    slug: string | null;
+}
 
-export function NoteList() {
+interface NoteListProps {
+    notes: Note[];
+}
+
+export function NoteList({ notes }: NoteListProps) {
     const containerRef = useRef<HTMLDivElement>(null);
-    const [notes, setNotes] = useState<Note[]>(DUMMY_NOTES);
+    const submit = useSubmit();
 
     const {
         isSelectionMode,
@@ -25,15 +32,15 @@ export function NoteList() {
     } = useSelectionMode({
         items: notes,
         containerRef,
-        getItemId: (note) => note.id,
+        getItemId: (note) => note.id.toString(),
     });
 
     const handleNoteClick = useCallback((note: Note) => {
         if (isSelectionMode) {
-            toggleSelection(note.id);
+            toggleSelection(note.id.toString());
         } else {
-            console.log('Open note:', note.id);
             // Navigate to note detail
+            window.location.href = `/${note.id}`;
         }
     }, [isSelectionMode, toggleSelection]);
 
@@ -42,21 +49,24 @@ export function NoteList() {
             // Only start selection mode if not already in it?
             // Actually if we are already in selection mode, long press could just toggle or do nothing specialized.
             // But prompt says: "The list starts in 'View Mode'... Trigger: User long-presses... App enters 'Selection Mode'"
-            startSelectionMode(note.id);
+            startSelectionMode(note.id.toString());
         } else {
-            toggleSelection(note.id);
+            toggleSelection(note.id.toString());
         }
     }, [isSelectionMode, startSelectionMode, toggleSelection]);
 
     const handleDelete = () => {
         if (confirm(`Delete ${selectedIds.size} notes?`)) {
-            setNotes(prev => prev.filter(n => !selectedIds.has(n.id)));
+            const formData = new FormData();
+            formData.append("intent", "delete_batch");
+            formData.append("ids", JSON.stringify(Array.from(selectedIds)));
+            submit(formData, { method: "post" });
             clearSelection();
         }
     };
 
     return (
-        <div className="flex flex-col h-full bg-gray-50/50">
+        <div className="flex flex-col h-screen w-full bg-gray-50">
 
             {/* Toolbar - Only visible in Selection Mode */}
             {isSelectionMode && (
@@ -111,7 +121,7 @@ export function NoteList() {
                             isSelectionMode={isSelectionMode}
                             onClick={() => handleNoteClick(note)}
                             onLongPress={() => handleNoteLongPress(note)}
-                            selected={selectedIds.has(note.id)} // Pass both naming conventions to be safe, though Interface defined 'selected'
+                            selected={selectedIds.has(note.id.toString())} // Pass both naming conventions to be safe, though Interface defined 'selected'
                         />
                     ))}
                 </div>

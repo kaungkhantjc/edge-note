@@ -1,7 +1,8 @@
+
 import { useRef, useCallback } from 'react';
 
 export interface Note {
-    id: string;
+    id: string | number;
     title: string;
     excerpt: string;
     date: string;
@@ -56,17 +57,17 @@ export function NoteCard({ note, selected, isSelectionMode, onClick, onLongPress
             className={`note-card group relative p-4 rounded-xl border transition-all duration-200 cursor-pointer 
         ${selected
                     ? 'bg-blue-50 border-blue-500 shadow-md transform scale-[1.02]'
-                    : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                    : 'bg-white p-4 rounded-xl border-gray-200 hover:border-gray-300 hover:shadow-sm'
                 }
-        select-none touch-manipulation
-      `}
+select-none touch-manipulation
+    `}
             onClick={() => onClick(note)}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             onTouchMove={handleTouchMove}
         >
             <div className="flex justify-between items-start mb-2">
-                <h3 className={`font-semibold text-lg line-clamp-1 ${selected ? 'text-blue-700' : 'text-gray-900'}`}>
+                <h3 className={`font-semibold text-lg line-clamp-1 ${selected ? 'text-blue-700' : 'text-gray-900'} `}>
                     {note.title}
                 </h3>
                 {selected && (
@@ -92,7 +93,7 @@ export function NoteCard({ note, selected, isSelectionMode, onClick, onLongPress
             {/* Overlay for selection effect */}
             <div className={`absolute inset-0 rounded-xl transition-colors pointer-events-none 
          ${selected ? 'bg-blue-500/5' : 'group-hover:bg-gray-50/50'}
-      `} />
+`} />
         </div>
     );
 }

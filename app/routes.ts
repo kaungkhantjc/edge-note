@@ -6,4 +6,16 @@ export default [
         path: "login",
         file: "routes/login.tsx",
     },
+    {
+        path: "new",
+        file: "routes/new.tsx",
+    },
+    {
+        path: ":id",
+        file: "routes/note-view.tsx",
+    },
+    {
+        path: ":id/edit",
+        file: "routes/note-edit.tsx",
+    },
 ] satisfies RouteConfig;
