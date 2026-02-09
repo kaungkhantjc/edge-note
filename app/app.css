@@ -1,16 +1,202 @@
 @import "tailwindcss" source(".");
 @custom-variant dark (&:where(.dark, .dark *));
 
+:root {
+  /* Material 3 Expressive - Primary Green #005f02 & #008003 */
+
+  /* Light Theme */
+  --color-primary: #008003;
+  /* Adjusted slightly lighter than 005f02 for better contrast as main action color, or stick to 005f02 */
+  --color-primary: #005f02;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #a6f798;
+  --color-on-primary-container: #002204;
+
+  --color-secondary: #52634f;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #d5e8cf;
+  --color-on-secondary-container: #111f0c;
+
+  --color-tertiary: #38656a;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #bcebf0;
+  --color-on-tertiary-container: #002022;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #410002;
+
+  --color-background: #fcfdf6;
+  --color-on-background: #1a1c19;
+
+  --color-surface: #fcfdf6;
+  --color-on-surface: #1a1c19;
+  --color-surface-container-low: #f6f8f1;
+  --color-surface-container: #f0f2eb;
+  --color-surface-container-high: #eaece5;
+
+  --color-outline: #72796f;
+  --color-outline-variant: #c2c8bd;
+
+  /* Elevations */
+  --shadow-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+  --shadow-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px 0px rgba(0, 0, 0, 0.3);
+}
+
+.dark {
+  /* Dark Theme */
+  --color-primary: #85fa8b;
+  --color-on-primary: #00390a;
+  --color-primary-container: #005312;
+  --color-on-primary-container: #a0fca1;
+
+  --color-secondary: #baccb0;
+  --color-on-secondary: #253423;
+  --color-secondary-container: #3b4b38;
+  --color-on-secondary-container: #d5e8cf;
+
+  --color-tertiary: #a0cfd4;
+  --color-on-tertiary: #00363b;
+  --color-tertiary-container: #1e4d52;
+  --color-on-tertiary-container: #bcebf0;
+
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+
+  --color-background: #1a1c19;
+  --color-on-background: #e2e3dd;
+
+  --color-surface: #1a1c19;
+  --color-on-surface: #e2e3dd;
+  --color-surface-container-low: #1d1f1c;
+  --color-surface-container: #212320;
+  --color-surface-container-high: #2b2d2a;
+
+  --color-outline: #8c9388;
+  --color-outline-variant: #424940;
+}
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  --color-primary: var(--color-primary);
+  --color-on-primary: var(--color-on-primary);
+  --color-primary-container: var(--color-primary-container);
+  --color-on-primary-container: var(--color-on-primary-container);
+
+  --color-secondary: var(--color-secondary);
+  --color-on-secondary: var(--color-on-secondary);
+  --color-secondary-container: var(--color-secondary-container);
+  --color-on-secondary-container: var(--color-on-secondary-container);
+
+  --color-tertiary: var(--color-tertiary);
+  --color-on-tertiary: var(--color-on-tertiary);
+  --color-tertiary-container: var(--color-tertiary-container);
+  --color-on-tertiary-container: var(--color-on-tertiary-container);
+
+  --color-error: var(--color-error);
+  --color-on-error: var(--color-on-error);
+  --color-error-container: var(--color-error-container);
+  --color-on-error-container: var(--color-on-error-container);
+
+  --color-background: var(--color-background);
+  --color-on-background: var(--color-on-background);
+
+  --color-surface: var(--color-surface);
+  --color-on-surface: var(--color-on-surface);
+  --color-surface-container-low: var(--color-surface-container-low);
+  --color-surface-container: var(--color-surface-container);
+  --color-surface-container-high: var(--color-surface-container-high);
+
+  --color-outline: var(--color-outline);
+  --color-outline-variant: var(--color-outline-variant);
+
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 24px;
+  --radius-4xl: 28px;
 }
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 h-full;
+  @apply bg-background text-on-background h-full transition-colors duration-300;
+  font-feature-settings: "cv11", "ss01";
 
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
+  }
+}
+
+/* Fallback Animations corresponding to tailwindcss-animate if not installed */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes zoomIn95 {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInTop2 {
+  from {
+    transform: translateY(-0.5rem);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-in.fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-in.zoom-in-95 {
+  animation: zoomIn95 0.1s ease-out forwards;
+}
+
+.animate-in.slide-in-from-top-2 {
+  animation: slideInTop2 0.2s ease-out forwards;
+}
+
+/* Custom scrollbar for desktop */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-outline-variant/40 rounded-full;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-outline-variant/60;
   }
 }

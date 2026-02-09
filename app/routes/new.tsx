@@ -2,11 +2,15 @@ import type { Route } from "./+types/new";
 import { MdEditor } from "md-editor-rt";
 import "md-editor-rt/lib/style.css";
 import { useState, useEffect } from "react";
-import { Form, redirect, useNavigation } from "react-router";
+import { Form, redirect, useNavigation, Link } from "react-router";
 import { requireAuth } from "../services/session.server";
 import { getDB } from "../services/db.server";
 import { notes } from "../drizzle/schema";
 import { useResolvedTheme } from "../hooks/useResolvedTheme";
+import { AppBar } from "../components/ui/AppBar";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { ArrowLeft, Save } from "lucide-react";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
     await requireAuth(request, context.cloudflare.env);
@@ -48,7 +52,6 @@ export default function NewNote() {
 
     useEffect(() => {
         const checkMobile = () => {
-            // If width is less than 768px (md breakpoint), disable preview
             setIsPreviewEnabled(window.innerWidth >= 768);
         };
         checkMobile();
@@ -57,51 +60,54 @@ export default function NewNote() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col">
-            <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3.5 flex items-center justify-between sticky top-0 z-50">
-                <h1 className="text-xl font-bold text-gray-800 dark:text-white">New Note</h1>
-                <div className="flex items-center gap-3">
-                    <a href="/" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                        Cancel
-                    </a>
-                    <button
-                        form="new-note-form"
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium shadow-sm transition-colors disabled:opacity-50"
-                    >
-                        {isSubmitting ? "Saving..." : "Save Note"}
-                    </button>
-                </div>
-            </header>
+        <div className="flex flex-col h-screen bg-background">
+            <AppBar
+                className="bg-background/80 backdrop-blur-md"
+                title="New Note"
+                startAction={
+                    <Link to="/">
+                        <Button variant="icon" icon={<ArrowLeft className="w-6 h-6" />} />
+                    </Link>
+                }
+                endAction={
+                    <div className="flex items-center gap-2">
+                        <Link to="/" className="hidden md:block">
+                            <Button variant="text">Cancel</Button>
+                        </Link>
+                        <Button
+                            form="new-note-form"
+                            type="submit"
+                            disabled={isSubmitting}
+                            variant="filled"
+                            icon={<Save className="w-4 h-4" />}
+                        >
+                            {isSubmitting ? "Saving..." : "Save Note"}
+                        </Button>
+                    </div>
+                }
+            />
 
-            <main className="flex-1 max-w-7xl mx-auto w-full p-6">
+            <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 overflow-hidden flex flex-col">
                 <Form method="post" id="new-note-form" className="flex flex-col gap-6 h-full">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="md:col-span-2 space-y-2">
-                            <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
-                            <input
-                                type="text"
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
+                        <div className="md:col-span-2">
+                            <Input
                                 name="title"
-                                id="title"
+                                label="Title"
                                 required
                                 placeholder="Note Title"
-                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-shadow"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label htmlFor="slug" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Slug (Optional)</label>
-                            <input
-                                type="text"
+                        <div>
+                            <Input
                                 name="slug"
-                                id="slug"
+                                label="Slug"
                                 placeholder="custom-slug"
-                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-shadow"
                             />
                         </div>
                     </div>
 
-                    <div className="flex-1 min-h-125 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm bg-white dark:bg-gray-800">
+                    <div className="flex-1 min-h-0 border border-outline-variant/40 rounded-2xl overflow-hidden shadow-sm bg-surface">
                         <input type="hidden" name="content" value={content} />
                         <MdEditor
                             key={`editor-${resolvedTheme}-${isPreviewEnabled}`}
@@ -114,38 +120,7 @@ export default function NewNote() {
                             noPrettier={false}
                             noUploadImg={true}
                             inputBoxWidth="60%"
-                            toolbars={[
-                                'bold',
-                                'underline',
-                                'italic',
-                                '-',
-                                'strikeThrough',
-                                'sub',
-                                'sup',
-                                'quote',
-                                'unorderedList',
-                                'orderedList',
-                                'task',
-                                '-',
-                                'codeRow',
-                                'code',
-                                'link',
-                                'image',
-                                'table',
-                                'mermaid',
-                                'katex',
-                                '-',
-                                'revoke',
-                                'next',
-                                'save',
-                                '=',
-                                'pageFullscreen',
-                                'fullscreen',
-                                'preview',
-                                'previewOnly',
-                                'htmlPreview',
-                                'catalog'
-                            ]}
+                            toolbarsExclude={['github']}
                         />
                     </div>
                 </Form>
@@ -153,4 +128,3 @@ export default function NewNote() {
         </div>
     );
 }
-

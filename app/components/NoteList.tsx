@@ -1,19 +1,12 @@
+import { Trash2, X } from 'lucide-react';
 import { useCallback } from 'react';
 import { useSubmit } from 'react-router';
-import { NoteCard } from './NoteCard';
-
-// Make Note type match Drizzle schema (partially, for UI)
-export interface Note {
-    id: number; // Changed from string to number to match DB
-    title: string;
-    excerpt: string;
-    date: string;
-    slug: string | null;
-}
+import { NoteCard, type Note } from './NoteCard';
+import { Button } from './ui/Button'; // Assuming we export Button from ui
 
 interface NoteListProps {
     notes: Note[];
-    selection: any; // Explicitly passed from parent
+    selection: any;
     containerRef: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -35,7 +28,6 @@ export function NoteList({ notes, selection, containerRef }: NoteListProps) {
         if (isSelectionMode) {
             toggleSelection(note.id.toString());
         } else {
-            // Navigate to note detail
             window.location.href = `/${note.id}`;
         }
     }, [isSelectionMode, toggleSelection]);
@@ -59,54 +51,53 @@ export function NoteList({ notes, selection, containerRef }: NoteListProps) {
     };
 
     return (
-        <div className="flex flex-col h-screen w-full bg-gray-50 dark:bg-gray-950">
+        <div className="flex flex-col h-full w-full bg-background text-on-background relative">
 
-            {/* Toolbar - Only visible in Selection Mode */}
+            {/* Selection Toolbar */}
             {isSelectionMode && (
-                <div className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3.5 shadow-sm flex items-center justify-between animate-in slide-in-from-top-2 duration-200">
+                <div className="sticky top-0 z-50 bg-surface-container/90 backdrop-blur-md px-4 py-2 border-b border-outline-variant/20 shadow-sm flex items-center justify-between animate-in slide-in-from-top-2 duration-200">
                     <div className="flex items-center gap-4">
-                        <button
+                        <Button
+                            variant="icon"
                             onClick={clearSelection}
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full text-gray-600 dark:text-gray-400 transition-colors"
                             aria-label="Cancel selection"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                        <span className="font-medium text-gray-900 dark:text-white border-l border-gray-300 dark:border-gray-700 pl-4">
-                            {selectedIds.size} selected
-                        </span>
-                        <button
-                            onClick={selectAll}
-                            className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-3 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-neutral-50 hover:text-neutral-700 hover:border-neutral-200 focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-neutral-900/20 dark:hover:text-neutral-400 dark:hover:border-neutral-900/30"
-                        >
-                            Select All
-                        </button>
+                            icon={<X className="w-6 h-6" />}
+                        />
+
+                        <div className="flex flex-col">
+                            <span className="text-lg font-medium text-on-surface">
+                                {selectedIds.size} selected
+                            </span>
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <button
+                        <Button
+                            variant="text"
+                            onClick={selectAll}
+                            className="bg-transparent"
+                        >
+                            Select All
+                        </Button>
+                        <Button
+                            variant="icon"
                             onClick={handleDelete}
                             disabled={selectedIds.size === 0}
-                            className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-3 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-neutral-50 hover:text-neutral-700 hover:border-neutral-200 focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-neutral-900/20 dark:hover:text-neutral-400 dark:hover:border-neutral-900/30"
                             title="Delete selected"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                        </button>
+                            className="text-error hover:bg-error/10"
+                            icon={<Trash2 className="w-6 h-6" />}
+                        />
                     </div>
                 </div>
             )}
 
-            {/* Note Grid - Scrollable Container */}
+            {/* Note Grid */}
             <div
-                className="flex-1 overflow-y-auto p-4 md:p-6 select-none relative"
+                className="flex-1 overflow-y-auto p-4 md:p-6 select-none relative scroll-smooth"
                 ref={containerRef}
                 onMouseDown={handleMouseDown}
             >
-                <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 pb-24">
                     {notes.map((note) => (
                         <NoteCard
                             key={note.id}
@@ -117,12 +108,24 @@ export function NoteList({ notes, selection, containerRef }: NoteListProps) {
                             selected={selectedIds.has(note.id.toString())}
                         />
                     ))}
+
+                    {notes.length === 0 && (
+                        <div className="col-span-full flex flex-col items-center justify-center p-12 text-on-surface-variant/50">
+                            <div className="w-24 h-24 rounded-full bg-surface-container-high mb-4 flex items-center justify-center">
+                                <span className="text-4xl">
+                                    <img src="/favicon.svg" alt="Logo" className="w-12 h-12" />
+                                </span>
+                            </div>
+                            <p className="text-lg">No notes found.</p>
+                            <p className="text-sm">Create one to get started!</p>
+                        </div>
+                    )}
                 </div>
 
-                {/* Selection Box Overlay */}
+                {/* Selection Box */}
                 {selectionBox && (
                     <div
-                        className="absolute bg-slate-500/20 border border-slate-500/50 pointer-events-none z-40 transition-none rounded-sm"
+                        className="absolute bg-primary/20 border border-primary/50 pointer-events-none z-40 transition-none rounded-sm"
                         style={{
                             left: selectionBox.x,
                             top: selectionBox.y,

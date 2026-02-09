@@ -1,5 +1,5 @@
-
-import { useRef, useCallback } from 'react';
+import React, { useRef, useCallback } from "react";
+import { cn } from "../lib/utils";
 
 export interface Note {
     id: string | number;
@@ -11,12 +11,19 @@ export interface Note {
 interface NoteCardProps {
     note: Note;
     selected: boolean;
-    isSelectionMode: boolean;
+    isSelectionMode?: boolean; // Optional if not used for styling logic explicitly
     onClick: (note: Note) => void;
     onLongPress: (note: Note) => void;
+    className?: string;
 }
 
-export function NoteCard({ note, selected, isSelectionMode, onClick, onLongPress }: NoteCardProps) {
+export function NoteCard({
+    note,
+    selected,
+    onClick,
+    onLongPress,
+    className,
+}: NoteCardProps) {
     const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLongPressing = useRef(false);
 
@@ -33,9 +40,8 @@ export function NoteCard({ note, selected, isSelectionMode, onClick, onLongPress
             clearTimeout(longPressTimer.current);
             longPressTimer.current = null;
         }
-
-        // Prevent default click if we just long-pressed
         if (isLongPressing.current) {
+            // Prevent click if long pressed
             e.preventDefault();
         }
     }, []);
@@ -47,53 +53,46 @@ export function NoteCard({ note, selected, isSelectionMode, onClick, onLongPress
         }
     }, []);
 
-    // For desktop, right click could also select? Or just drag?
-    // User spec only mentions drag.
-    // We'll stick to basic click handling.
-
     return (
         <div
             id={`note-card-${note.id}`}
-            className={`note-card group relative p-4 rounded-xl border transition-all duration-200 cursor-pointer 
-        ${selected
-                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-500 shadow-md transform scale-[1.02]'
-                    : 'bg-white dark:bg-gray-800 p-4 rounded-xl border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm'
-                }
-select-none touch-manipulation
-    `}
+            className={cn(
+                "group relative flex flex-col p-5 h-56 transition-all duration-300 rounded-[24px] cursor-pointer overflow-hidden border border-transparent touch-manipulation select-none",
+                selected
+                    ? "bg-secondary-container text-on-secondary-container ring-2 ring-primary border-primary"
+                    : "bg-surface-container-high hover:bg-surface-container hover:shadow-md text-on-surface border-none",
+                className
+            )}
             onClick={() => onClick(note)}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             onTouchMove={handleTouchMove}
         >
-            <div className="flex justify-between items-start mb-2">
-                <h3 className={`font-semibold text-lg line-clamp-1 ${selected ? 'text-blue-700 dark:text-blue-400' : 'text-gray-900 dark:text-white'} `}>
+            <div className="flex justify-between items-start mb-3 gap-2">
+                <h3 className={cn("font-bold text-lg leading-snug line-clamp-2 transition-colors font-sans tracking-tight", selected ? "text-on-secondary-container" : "text-on-surface")}>
                     {note.title}
                 </h3>
                 {selected && (
-                    <div className="bg-blue-500 text-white rounded-full p-1">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                        >
+                    <div className="bg-primary text-on-primary rounded-full p-1 shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                     </div>
                 )}
             </div>
-            <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-3 mb-3">
-                {note.excerpt}
+
+            <p className={cn("text-base leading-relaxed line-clamp-4 flex-grow font-normal", selected ? "text-on-secondary-container/80" : "text-on-surface-variant")}>
+                {note.excerpt || "No additional text"}
             </p>
-            <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">
-                {new Date(note.date).toLocaleDateString()}
+
+            <div className="mt-auto flex items-center justify-between pt-4">
+                <span className={cn("text-xs font-medium px-2.5 py-1 rounded-lg tracking-wide", selected ? "bg-primary/10 text-primary" : "bg-surface-container text-on-surface-variant")}>
+                    {new Date(note.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                </span>
             </div>
 
-            {/* Overlay for selection effect */}
-            <div className={`absolute inset-0 rounded-xl transition-colors pointer-events-none 
-         ${selected ? 'bg-blue-500/5' : 'group-hover:bg-gray-50/50 dark:group-hover:bg-gray-700/50'}
-`} />
+            {/* State Layer (Overlay on hover) */}
+            {!selected && <div className="absolute inset-0 bg-on-surface opacity-0 group-hover:opacity-[0.08] pointer-events-none transition-opacity duration-200" />}
         </div>
     );
 }
