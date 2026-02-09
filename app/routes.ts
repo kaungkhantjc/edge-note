@@ -11,6 +11,10 @@ export default [
         file: "routes/new.tsx",
     },
     {
+        path: "logout",
+        file: "routes/logout.tsx",
+    },
+    {
         path: ":id",
         file: "routes/note-view.tsx",
     },
