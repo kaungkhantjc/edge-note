@@ -1,6 +1,5 @@
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import { useSubmit } from 'react-router';
-import { useSelectionMode } from '../hooks/useSelection';
 import { NoteCard } from './NoteCard';
 
 // Make Note type match Drizzle schema (partially, for UI)
@@ -14,10 +13,11 @@ export interface Note {
 
 interface NoteListProps {
     notes: Note[];
+    selection: any; // Explicitly passed from parent
+    containerRef: React.RefObject<HTMLDivElement | null>;
 }
 
-export function NoteList({ notes }: NoteListProps) {
-    const containerRef = useRef<HTMLDivElement>(null);
+export function NoteList({ notes, selection, containerRef }: NoteListProps) {
     const submit = useSubmit();
 
     const {
@@ -29,11 +29,7 @@ export function NoteList({ notes }: NoteListProps) {
         startSelectionMode,
         clearSelection,
         selectAll,
-    } = useSelectionMode({
-        items: notes,
-        containerRef,
-        getItemId: (note) => note.id.toString(),
-    });
+    } = selection;
 
     const handleNoteClick = useCallback((note: Note) => {
         if (isSelectionMode) {
@@ -46,9 +42,6 @@ export function NoteList({ notes }: NoteListProps) {
 
     const handleNoteLongPress = useCallback((note: Note) => {
         if (!isSelectionMode) {
-            // Only start selection mode if not already in it?
-            // Actually if we are already in selection mode, long press could just toggle or do nothing specialized.
-            // But prompt says: "The list starts in 'View Mode'... Trigger: User long-presses... App enters 'Selection Mode'"
             startSelectionMode(note.id.toString());
         } else {
             toggleSelection(note.id.toString());
@@ -121,7 +114,7 @@ export function NoteList({ notes }: NoteListProps) {
                             isSelectionMode={isSelectionMode}
                             onClick={() => handleNoteClick(note)}
                             onLongPress={() => handleNoteLongPress(note)}
-                            selected={selectedIds.has(note.id.toString())} // Pass both naming conventions to be safe, though Interface defined 'selected'
+                            selected={selectedIds.has(note.id.toString())}
                         />
                     ))}
                 </div>
