@@ -8,6 +8,8 @@ import { ThemeToggle } from "../components/theme-toggle";
 import { AppBar } from "../components/ui/AppBar";
 import { Button } from "../components/ui/Button";
 import { SearchBar } from "../components/ui/Input";
+import { useActionData, useSearchParams } from "react-router";
+import { useUI } from "../components/ui/UIProvider";
 import { notes } from "../drizzle/schema";
 import { useSelectionMode } from '../hooks/useSelection';
 import { getDB } from "../services/db.server";
@@ -41,7 +43,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return {
     notes: allNotes.map(n => ({
       id: n.id,
-      title: n.title,
+      title: n.title || "Untitled",
       content: n.content, // Needed for simple usage if any
       excerpt: n.content.replace(/[#*`]/g, '').slice(0, 150) + (n.content.length > 150 ? "..." : ""),
       date: n.createdAt ? new Date(n.createdAt).toISOString() : new Date().toISOString(),
@@ -104,6 +106,28 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
     return () => clearTimeout(timer);
   }, [q, submit, loaderData.q]);
+
+  const { showSnackbar } = useUI();
+  const actionData = useActionData<{ success?: boolean }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (actionData?.success) {
+      showSnackbar("Notes deleted successfully");
+    }
+  }, [actionData, showSnackbar]);
+
+  useEffect(() => {
+    if (searchParams.get("deleted") === "1") {
+      showSnackbar("Note deleted successfully");
+      // Remove the param without affecting history much
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("deleted");
+        return next;
+      }, { replace: true });
+    }
+  }, [searchParams, showSnackbar, setSearchParams]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQ(e.target.value);

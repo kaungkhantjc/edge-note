@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { useSubmit } from 'react-router';
 import { NoteCard, type Note } from './NoteCard';
 import { Button } from './ui/Button'; // Assuming we export Button from ui
+import { useUI } from './ui/UIProvider';
 
 interface NoteListProps {
     notes: Note[];
@@ -40,14 +41,22 @@ export function NoteList({ notes, selection, containerRef }: NoteListProps) {
         }
     }, [isSelectionMode, startSelectionMode, toggleSelection]);
 
+    const { showModal } = useUI();
     const handleDelete = () => {
-        if (confirm(`Delete ${selectedIds.size} notes?`)) {
-            const formData = new FormData();
-            formData.append("intent", "delete_batch");
-            formData.append("ids", JSON.stringify(Array.from(selectedIds)));
-            submit(formData, { method: "post" });
-            clearSelection();
-        }
+        showModal({
+            title: `Delete ${selectedIds.size} notes?`,
+            description: `Are you sure you want to delete these ${selectedIds.size} notes? This action cannot be undone.`,
+            confirmText: "Delete",
+            isDestructive: true,
+            icon: <Trash2 className="w-6 h-6" />,
+            onConfirm: () => {
+                const formData = new FormData();
+                formData.append("intent", "delete_batch");
+                formData.append("ids", JSON.stringify(Array.from(selectedIds)));
+                submit(formData, { method: "post" });
+                clearSelection();
+            }
+        });
     };
 
     return (

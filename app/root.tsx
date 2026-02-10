@@ -49,6 +49,7 @@ export const links: Route.LinksFunction = () => [
 ];
 
 import { ThemeProvider } from "./components/theme-provider";
+import { UIProvider } from "./components/ui/UIProvider";
 import { useRouteLoaderData } from "react-router";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -106,7 +107,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ThemeProvider specifiedTheme={initialTheme}>
-          {children}
+          <UIProvider>
+            {children}
+          </UIProvider>
         </ThemeProvider>
         <ScrollRestoration />
         <Scripts />

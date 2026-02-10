@@ -12,6 +12,7 @@ import { getDB } from "../services/db.server";
 import { requireAuth } from "../services/session.server";
 import type { Route } from "./+types/note-view";
 import { ThemeToggle } from "../components/theme-toggle";
+import { useUI } from "../components/ui/UIProvider";
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data || !data.note) {
@@ -53,7 +54,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const db = getDB(context.cloudflare.env);
     await db.delete(notes).where(eq(notes.id, noteId));
 
-    return redirect("/");
+    return redirect("/?deleted=1");
 }
 
 export default function NoteView({ loaderData }: Route.ComponentProps) {
@@ -63,12 +64,20 @@ export default function NoteView({ loaderData }: Route.ComponentProps) {
 
     // For manual form submission
     const submit = useSubmit();
+    const { showModal } = useUI();
 
     const handleDelete = () => {
-        if (confirm("Are you sure you want to delete this note?")) {
-            const formData = new FormData();
-            submit(formData, { method: "post" });
-        }
+        showModal({
+            title: "Delete note?",
+            description: "Are you sure you want to delete this note? This action cannot be undone.",
+            confirmText: "Delete",
+            isDestructive: true,
+            icon: <Trash2 className="w-6 h-6" />,
+            onConfirm: () => {
+                const formData = new FormData();
+                submit(formData, { method: "post" });
+            }
+        });
     }
 
     const formatDate = (date: Date | string | number | null) => {
