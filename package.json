@@ -9,7 +9,9 @@
 		"dev": "react-router dev",
 		"postinstall": "npm run cf-typegen",
 		"preview": "npm run build && vite preview",
-		"typecheck": "npm run cf-typegen && react-router typegen && tsc -b"
+		"typecheck": "npm run cf-typegen && react-router typegen && tsc -b",
+		"db:seed:local": "tsx scripts/seed.ts && wrangler d1 execute edge-note-db --local --file=./seed.sql",
+		"db:seed:remote": "tsx scripts/seed.ts && wrangler d1 execute edge-note-db --remote --file=./seed.sql"
 	},
 	"dependencies": {
 		"@codemirror/view": "^6.39.13",
@@ -27,12 +29,14 @@
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.13.5",
+		"@faker-js/faker": "^10.3.0",
 		"@react-router/dev": "^7.10.0",
 		"@tailwindcss/vite": "^4.1.13",
 		"@types/node": "^22.19.10",
 		"@types/react": "^19.1.13",
 		"@types/react-dom": "^19.1.9",
 		"tailwindcss": "^4.1.13",
+		"tsx": "^4.21.0",
 		"typescript": "^5.9.2",
 		"vite": "^7.1.7",
 		"vite-tsconfig-paths": "^5.1.4",
