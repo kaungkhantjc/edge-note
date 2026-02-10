@@ -9,10 +9,20 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { config } from "md-editor-rt";
+import { config, XSSPlugin } from "md-editor-rt";
 import { lineNumbers } from '@codemirror/view';
 
 config({
+  markdownItPlugins(plugins) {
+    return [
+      ...plugins,
+      {
+        type: 'xss',
+        plugin: XSSPlugin,
+        options: {}
+      }
+    ];
+  },
   codeMirrorExtensions(extensions, _options) {
     return [
       ...extensions,

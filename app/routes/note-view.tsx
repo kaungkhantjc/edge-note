@@ -71,12 +71,24 @@ export default function NoteView({ loaderData }: Route.ComponentProps) {
         }
     }
 
+    const formatDate = (date: Date | string | number | null) => {
+        if (!date) return "N/A";
+        return new Date(date).toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        }).replace(',', '');
+    };
+
     return (
-        <div className="min-h-screen bg-white dark:bg-black flex flex-col">
+        <div className="min-h-screen flex flex-col">
             <AppBar
-                className="bg-background/80 backdrop-blur-md"
+                className="bg-background/80 backdrop-blur-md px-4"
                 title={
-                    <span className="font-semibold text-lg">{note.title}</span>
+                    <span className="font-semibold text-lg">{note.title || "Untitled"}</span>
                 }
                 startAction={
                     <Link to="/">
@@ -84,8 +96,7 @@ export default function NoteView({ loaderData }: Route.ComponentProps) {
                     </Link>
                 }
                 endAction={
-                    <div className="flex items-center gap-1">
-                        <ThemeToggle />
+                    <div className="flex items-center gap-2">
                         {/* Desktop Actions */}
                         <div className="hidden md:flex gap-2">
                             <Link to={`/${note.id}/edit`}>
@@ -93,6 +104,8 @@ export default function NoteView({ loaderData }: Route.ComponentProps) {
                             </Link>
                             <Button variant="tonal" size="md" onClick={handleDelete}>Delete</Button>
                         </div>
+
+                        <ThemeToggle />
 
                         {/* Mobile Actions */}
                         <div className="md:hidden">
@@ -111,19 +124,33 @@ export default function NoteView({ loaderData }: Route.ComponentProps) {
 
             <div className="flex-1 w-full max-w-5xl mx-auto flex flex-col md:flex-row gap-8 p-6 md:p-8 animate-in fade-in duration-500 delay-100">
                 <article className="flex-1 min-w-0 prose prose-lg dark:prose-invert max-w-none prose-headings:font-sans prose-p:text-on-surface-variant prose-headings:text-on-surface">
+                    <div className="mb-8 pb-4 border-b border-outline-variant/30 flex flex-wrap gap-x-8 gap-y-2 text-sm text-on-surface-variant">
+                        <div className="flex items-center gap-2">
+                            <span className="font-bold text-primary/80">Created:</span>
+                            <span>{formatDate(note.createdAt)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="font-bold text-primary/80">Updated:</span>
+                            <span>{formatDate(note.updatedAt)}</span>
+                        </div>
+                    </div>
+
                     <MdPreview
                         key={resolvedTheme}
-                        editorId="preview-only"
-                        modelValue={note.content}
+                        id="preview-only"
+                        value={note.content}
                         theme={resolvedTheme}
                         // We might want to customize the CSS of MdPreview to match M3, but general prose is usually fine.
                         className="bg-transparent"
+                        language="en-US"
+                        codeTheme="github"
+                        previewTheme="github"
                     />
                 </article>
 
-                <aside className="hidden lg:block w-72 shrink-0 sticky top-24 h-[calc(100vh-8rem)] overflow-y-auto pr-2 custom-scrollbar">
+                <aside className="hidden lg:block items-center w-72 shrink-0 sticky top-24 h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar">
                     <div className="text-xs font-bold text-primary uppercase tracking-widest mb-4 px-2">Table of Contents</div>
-                    <div className="bg-surface-container-low rounded-2xl p-4">
+                    <div className="bg-surface-container-low rounded-2xl p-4 w-full">
                         <MdCatalog editorId="preview-only" scrollElement={scrollElement} theme={resolvedTheme} />
                     </div>
                 </aside>

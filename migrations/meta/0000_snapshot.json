@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "f369496a-eb4f-48b9-83c6-bd64e68f286e",
+  "id": "c8fcddda-bb8f-4517-861d-4dce318146ef",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "notes": {
@@ -18,7 +18,7 @@
           "name": "title",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "content": {
@@ -68,10 +68,17 @@
           ],
           "isUnique": true
         },
-        "title_idx": {
-          "name": "title_idx",
+        "created_at_idx": {
+          "name": "created_at_idx",
           "columns": [
-            "title"
+            "created_at"
+          ],
+          "isUnique": false
+        },
+        "updated_at_idx": {
+          "name": "updated_at_idx",
+          "columns": [
+            "updated_at"
           ],
           "isUnique": false
         }

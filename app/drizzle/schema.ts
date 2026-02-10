@@ -3,7 +3,7 @@ import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const notes = sqliteTable("notes", {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    title: text("title").notNull(),
+    title: text("title"),
     content: text("content").notNull(),
     isPublic: integer("is_public", { mode: "boolean" }).default(false),
     slug: text("slug").unique(),
@@ -14,6 +14,6 @@ export const notes = sqliteTable("notes", {
         sql`(strftime('%s', 'now'))`
     ),
 }, (table) => [
-    index("title_idx").on(table.title),
     index("created_at_idx").on(table.createdAt),
+    index("updated_at_idx").on(table.updatedAt),
 ]);

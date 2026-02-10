@@ -151,6 +151,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           <div className="md:hidden p-4 bg-background sticky top-0 z-20">
             <Form method="get" action="/">
               <SearchBar
+                className="h-14"
                 name="q"
                 value={q}
                 placeholder="Search notes"

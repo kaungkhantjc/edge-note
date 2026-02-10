@@ -1,6 +1,6 @@
 CREATE TABLE `notes` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-	`title` text NOT NULL,
+	`title` text,
 	`content` text NOT NULL,
 	`is_public` integer DEFAULT false,
 	`slug` text,
@@ -9,4 +9,5 @@ CREATE TABLE `notes` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `notes_slug_unique` ON `notes` (`slug`);--> statement-breakpoint
-CREATE INDEX `title_idx` ON `notes` (`title`);
+CREATE INDEX `created_at_idx` ON `notes` (`created_at`);--> statement-breakpoint
+CREATE INDEX `updated_at_idx` ON `notes` (`updated_at`);

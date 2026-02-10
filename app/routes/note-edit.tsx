@@ -1,5 +1,5 @@
-import { eq } from "drizzle-orm";
-import { redirect, useNavigation } from "react-router";
+import { eq, ne, and } from "drizzle-orm";
+import { redirect, useActionData, useNavigation } from "react-router";
 import { NoteEditorLayout } from "../components/NoteEditorLayout";
 import { notes } from "../drizzle/schema";
 import { getDB } from "../services/db.server";
@@ -46,23 +46,40 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const formData = await request.formData();
 
     const title = formData.get("title") as string;
-    const slug = formData.get("slug") as string;
+    const slug = (formData.get("slug") as string | null)?.trim() || "";
     const content = formData.get("content") as string;
 
-    if (!title || !content) {
-        return { error: "Title and content are required" };
+    if (!content) {
+        return { errors: { content: "Content is required" } };
     }
 
     const db = getDB(context.cloudflare.env);
 
-    await db.update(notes)
-        .set({
-            title,
-            slug: slug || null,
-            content,
-            updatedAt: new Date()
-        })
-        .where(eq(notes.id, noteId));
+    if (slug) {
+        const existing = await db.select().from(notes)
+            .where(and(eq(notes.slug, slug), ne(notes.id, noteId)))
+            .limit(1);
+
+        if (existing.length > 0) {
+            return { errors: { slug: "Slug already exists" } };
+        }
+    }
+
+    try {
+        await db.update(notes)
+            .set({
+                title,
+                slug: slug || null,
+                content,
+                updatedAt: new Date()
+            })
+            .where(eq(notes.id, noteId));
+    } catch (error: any) {
+        if (error.message.includes("UNIQUE constraint failed: notes.slug")) {
+            return { errors: { slug: "Slug already exists" } };
+        }
+        return { errors: { global: "Failed to update note" } };
+    }
 
     return redirect(`/${noteId}`);
 }
@@ -70,6 +87,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 export default function EditNote({ loaderData }: Route.ComponentProps) {
     const { note } = loaderData;
     const navigation = useNavigation();
+    const actionData = useActionData<typeof action>();
     const isSubmitting = navigation.state === "submitting";
 
     return (
@@ -79,9 +97,10 @@ export default function EditNote({ loaderData }: Route.ComponentProps) {
             backLink={`/${note.id}`}
             formId="edit-note-form"
             isSubmitting={isSubmitting}
-            initialTitle={note.title}
+            initialTitle={note.title ?? undefined}
             initialSlug={note.slug || ""}
             initialContent={note.content}
+            errors={actionData?.errors}
         />
     );
 }

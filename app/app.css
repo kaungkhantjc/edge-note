@@ -200,3 +200,26 @@ body {
     @apply bg-outline-variant/60;
   }
 }
+
+/** MdEditor theme */
+.cm-editor {
+  background-color: var(--color-background) !important;
+  font-size: 16px !important;
+}
+
+.cm-content {
+  line-height: 1.8 !important;
+}
+
+.cm-lineNumbers {
+  background-color: var(--color-background) !important;
+  line-height: 1.8 !important;
+}
+
+.md-editor-preview {
+  background-color: var(--color-background) !important;
+}
+
+.md-editor-custom-scrollbar__track {
+  background-color: var(--color-outline-variant) !important;
+}

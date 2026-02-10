@@ -1,1 +1,0 @@
-CREATE INDEX `created_at_idx` ON `notes` (`created_at`);
