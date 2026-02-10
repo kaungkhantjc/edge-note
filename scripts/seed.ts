@@ -12,10 +12,10 @@ function escapeSql(str: string): string {
 async function seed() {
     console.log('🌱 Starting database seed generation...');
 
-    let sql = '-- Database Seed\n';
+    let sql = '-- Database Seed\nDELETE FROM notes;\n';
 
     for (let i = 0; i < SEED_COUNT; i++) {
-        const title = faker.lorem.sentence({ min: 3, max: 7 });
+        const title = "Note " + (SEED_COUNT - i);
         const content = `
 # ${title}
 
@@ -38,9 +38,9 @@ ${faker.lorem.paragraphs(2)}
         const isPublic = faker.datatype.boolean() ? 1 : 0;
 
         // Use unix timestamps (seconds)
-        const createdAtDate = faker.date.past({ years: 1 });
-        const createdAt = Math.floor(createdAtDate.getTime() / 1000);
-        const updatedAt = Math.floor(faker.date.between({ from: createdAtDate, to: new Date() }).getTime() / 1000);
+        const now = Math.floor(Date.now() / 1000);
+        const createdAt = now - (i * 60);
+        const updatedAt = createdAt;
 
         sql += `INSERT INTO notes (title, content, slug, is_public, created_at, updated_at) VALUES ('${escapeSql(title)}', '${escapeSql(content)}', '${escapeSql(slug)}', ${isPublic}, ${createdAt}, ${updatedAt});\n`;
     }
