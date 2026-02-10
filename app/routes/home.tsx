@@ -1,7 +1,7 @@
-import { desc, inArray, like, or } from "drizzle-orm";
+import { desc, inArray, like, or, sql } from "drizzle-orm";
 import { LogOut, Plus } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
-import { data, Form, Link, useSubmit } from "react-router";
+import { data, Form, Link, useSubmit, useFetcher } from "react-router";
 import { NoteList } from "../components/NoteList";
 import { useTheme } from "../components/theme-provider";
 import { ThemeToggle } from "../components/theme-toggle";
@@ -28,8 +28,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const db = getDB(context.cloudflare.env);
   const url = new URL(request.url);
   const q = url.searchParams.get("q");
+  const page = parseInt(url.searchParams.get("page") || "1", 10);
+  const limit = 24;
+  const offset = (page - 1) * limit;
 
-  let query = db.select().from(notes).$dynamic();
+  let query = db.select({
+    id: notes.id,
+    title: notes.title,
+    createdAt: notes.createdAt,
+    slug: notes.slug,
+    excerpt: sql<string>`SUBSTR(${notes.content}, 1, 200)`
+  }).from(notes).$dynamic();
 
   if (q) {
     query = query.where(or(
@@ -38,18 +47,21 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     ));
   }
 
-  const allNotes = await query.orderBy(desc(notes.createdAt));
+  const resultNotes = await query
+    .orderBy(desc(notes.createdAt))
+    .limit(limit)
+    .offset(offset);
 
   return {
-    notes: allNotes.map(n => ({
+    notes: resultNotes.map(n => ({
       id: n.id,
       title: n.title || "Untitled",
-      content: n.content, // Needed for simple usage if any
-      excerpt: n.content.replace(/[#*`]/g, '').slice(0, 150) + (n.content.length > 150 ? "..." : ""),
+      excerpt: n.excerpt?.replace(/[#*`]/g, '') || "",
       date: n.createdAt ? new Date(n.createdAt).toISOString() : new Date().toISOString(),
       slug: n.slug
     })),
-    q: q || ""
+    q: q || "",
+    page
   };
 }
 
@@ -83,13 +95,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const submit = useSubmit();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const selection = useSelectionMode({
-    items: loaderData.notes,
-    containerRef,
-    getItemId: (note) => note.id.toString(),
-  });
-
-  const { isSelectionMode } = selection;
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
   // Search handler state and debounce
   const [q, setQ] = useState(loaderData.q || "");
 
@@ -188,8 +194,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
         <NoteList
           notes={loaderData.notes}
-          selection={selection}
           containerRef={containerRef}
+          onSelectionModeChange={setIsSelectionMode}
         />
       </div>
 
