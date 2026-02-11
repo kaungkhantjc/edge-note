@@ -1,6 +1,6 @@
 import { Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useFetcher } from 'react-router';
+import { useFetcher, useNavigate } from 'react-router';
 import { useSelectionMode } from '../hooks/useSelection';
 import { NoteCard, type Note } from './NoteCard';
 import { Button } from './ui/Button';
@@ -32,6 +32,7 @@ export function NoteList({
     children
 }: NoteListProps) {
     const fetcher = useFetcher<any>();
+    const navigate = useNavigate();
     const { showSnackbar } = useUI();
 
     // State for local accumulation of notes
@@ -144,7 +145,7 @@ export function NoteList({
         if (isSelectionMode) {
             toggleSelection(note.id.toString());
         } else {
-            window.location.href = `/${note.id}`;
+            navigate(`/${note.id}`, { viewTransition: true });
         }
     }, [isSelectionMode, toggleSelection]);
 

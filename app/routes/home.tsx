@@ -228,7 +228,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   }, [fetcher.data, fetcher.formData]);
 
   return (
-    <div className="flex flex-col h-screen bg-background text-on-background overflow-hidden">
+    <div
+      className="flex flex-col h-screen bg-background text-on-background overflow-hidden"
+      style={{ viewTransitionName: 'home-page' }}
+    >
       {/* Unified Header Container to avoid layout 'glitch' */}
       <div className="relative h-18 md:h-16 shrink-0 z-50">
         {/* Default App Bar */}
@@ -258,7 +261,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             endAction={
               <div className="flex items-center gap-2">
                 <div className="hidden md:flex items-center gap-3 mr-2">
-                  <Link to="/new">
+                  <Link to="/new" viewTransition>
                     <Button
                       variant="tonal"
                       className="rounded-xl h-11 px-4 flex items-center gap-2 font-medium"
