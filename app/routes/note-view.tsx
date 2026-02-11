@@ -1,8 +1,7 @@
 import { eq } from "drizzle-orm";
-import { ArrowLeft, MoreVertical, Pen, Trash2 } from "lucide-react";
-import { MdCatalog, MdPreview } from "md-editor-rt";
-import "md-editor-rt/lib/preview.css";
+import { ArrowLeft, Globe, Lock, MoreVertical, Pen, Trash2 } from "lucide-react";
 import { data, Link, redirect, useSubmit } from "react-router";
+import { NotePublicViewer } from "../components/NotePublicViewer";
 import { AppBar } from "../components/ui/AppBar";
 import { Button } from "../components/ui/Button";
 import { DropdownItem, DropdownMenu } from "../components/ui/DropdownMenu";
@@ -131,39 +130,34 @@ export default function NoteView({ loaderData }: Route.ComponentProps) {
                 }
             />
 
-            <div className="flex-1 w-full max-w-5xl mx-auto flex flex-col md:flex-row gap-8 p-6 md:p-8 animate-in fade-in duration-500 delay-100">
-                <article className="flex-1 min-w-0 prose prose-lg dark:prose-invert max-w-none prose-headings:font-sans prose-p:text-on-surface-variant prose-headings:text-on-surface">
-                    <div className="mb-8 pb-4 border-b border-outline-variant/30 flex flex-wrap gap-x-8 gap-y-2 text-sm text-on-surface-variant">
-                        <div className="flex items-center gap-2">
-                            <span className="font-bold text-primary/80">Created:</span>
-                            <span>{formatDate(note.createdAt)}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="font-bold text-primary/80">Updated:</span>
-                            <span>{formatDate(note.updatedAt)}</span>
-                        </div>
-                    </div>
-
-                    <MdPreview
-                        key={resolvedTheme}
-                        id="preview-only"
-                        value={note.content}
-                        theme={resolvedTheme}
-                        // We might want to customize the CSS of MdPreview to match M3, but general prose is usually fine.
-                        className="bg-transparent"
-                        language="en-US"
-                        codeTheme="github"
-                        previewTheme="github"
-                    />
-                </article>
-
-                <aside className="hidden lg:block items-center w-72 shrink-0 sticky top-24 h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar">
-                    <div className="text-xs font-bold text-primary uppercase tracking-widest mb-4 px-2">Table of Contents</div>
-                    <div className="bg-surface-container-low rounded-2xl p-4 w-full">
-                        <MdCatalog editorId="preview-only" scrollElement={scrollElement} theme={resolvedTheme} />
-                    </div>
-                </aside>
+            {/* Metadata Bar */}
+            <div className="w-full max-w-5xl mx-auto px-6 md:px-8 pt-6 flex flex-wrap items-center gap-x-8 gap-y-3 text-[11px] font-medium animate-in fade-in slide-in-from-top-2 duration-500">
+                <div className="flex items-center gap-2.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                    <span className="text-on-surface-variant/70 uppercase tracking-wider font-bold">Created:</span>
+                    <span className="text-on-surface">{formatDate(note.createdAt)}</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                    <span className="text-on-surface-variant/70 uppercase tracking-wider font-bold">Updated:</span>
+                    <span className="text-on-surface">{formatDate(note.updatedAt)}</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high/50 border border-outline-variant/30 text-on-surface">
+                    {note.isPublic ? (
+                        <>
+                            <Globe className="w-3.5 h-3.5 text-primary" />
+                            <span>Public</span>
+                        </>
+                    ) : (
+                        <>
+                            <Lock className="w-3.5 h-3.5 text-secondary" />
+                            <span>Private</span>
+                        </>
+                    )}
+                </div>
             </div>
+
+            <NotePublicViewer title={note.title || "Untitled"} content={note.content} />
         </div>
     );
 }

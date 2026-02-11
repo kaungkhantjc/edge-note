@@ -20,6 +20,10 @@ export default [
         file: "routes/api-notes.tsx",
     },
     {
+        path: "s/:slug",
+        file: "routes/note-public-view.tsx",
+    },
+    {
         path: ":id",
         file: "routes/note-view.tsx",
     },

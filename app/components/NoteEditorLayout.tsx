@@ -111,11 +111,11 @@ export function NoteEditorLayout({
                         <div>
                             <Input
                                 name="slug"
-                                label={isPublic ? "Slug" : "Slug (Required)"}
+                                label={isPublic ? "Slug (Required)" : "Slug"}
                                 placeholder="custom-slug"
                                 defaultValue={initialSlug}
                                 error={errors?.slug}
-                                required={!isPublic}
+                                required={isPublic}
                             />
                         </div>
                     </div>
