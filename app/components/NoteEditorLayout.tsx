@@ -2,7 +2,7 @@ import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { MdEditor } from "md-editor-rt";
 import "md-editor-rt/lib/style.css";
 import { useEffect, useState } from "react";
-import { Form, Link } from "react-router";
+import { Form, Link, useSubmit } from "react-router";
 import { AppBar } from "./ui/AppBar";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
@@ -44,6 +44,14 @@ export function NoteEditorLayout({
     const [isPublic, setIsPublic] = useState(initialIsPublic);
     const [isPreviewEnabled, setIsPreviewEnabled] = useState(true);
     const resolvedTheme = useResolvedTheme();
+    const submit = useSubmit();
+
+    const handleSave = () => {
+        const form = document.getElementById(formId) as HTMLFormElement;
+        if (form) {
+            submit(form);
+        }
+    };
 
     useEffect(() => {
         const checkMobile = () => {
@@ -140,6 +148,7 @@ export function NoteEditorLayout({
                                 toolbarsExclude={['github']}
                                 codeTheme="github"
                                 previewTheme="github"
+                                onSave={handleSave}
                             />
                         </div>
                         {errors?.content && (

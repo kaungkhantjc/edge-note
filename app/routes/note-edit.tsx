@@ -54,8 +54,8 @@ export async function action({ request, params, context }: Route.ActionArgs) {
         return { errors: { content: "Content is required" } };
     }
 
-    if (!isPublic && !slug) {
-        return { errors: { slug: "Slug is required for private notes" } };
+    if (isPublic && !slug) {
+        return { errors: { slug: "Slug is required for public notes" } };
     }
 
     const db = getDB(context.cloudflare.env);
