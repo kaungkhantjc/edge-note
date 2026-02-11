@@ -1,4 +1,5 @@
 import React, { useRef, useCallback } from "react";
+import { Globe, Lock } from "lucide-react";
 import { cn } from "../lib/utils";
 
 export interface Note {
@@ -6,6 +7,7 @@ export interface Note {
     title: string;
     excerpt: string;
     date: string;
+    isPublic: boolean;
 }
 
 interface NoteCardProps {
@@ -105,7 +107,7 @@ export const NoteCard = React.memo(function NoteCard({
         <div
             id={`note-card-${note.id}`}
             className={cn(
-                "group relative flex flex-col p-5 h-56 transition-all duration-300 rounded-3xl cursor-pointer overflow-hidden border border-transparent touch-manipulation select-none",
+                "group relative flex flex-col p-5 h-56 transition-all duration-300 rounded-3xl cursor-pointer overflow-hidden touch-manipulation select-none",
                 "note-card transition-shadow duration-200",
                 selected
                     ? "bg-secondary-container text-on-secondary-container ring-2 ring-primary border-primary shadow-lg"
@@ -143,6 +145,23 @@ export const NoteCard = React.memo(function NoteCard({
                 <span className={cn("text-xs font-medium px-2.5 py-1 rounded-lg tracking-wide", selected ? "bg-primary/10 text-primary" : "bg-surface-container text-on-surface-variant")}>
                     {formattedDate}
                 </span>
+
+                <div className={cn(
+                    "flex items-center justify-center size-8 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                    note.isPublic
+                        ? (selected ? "bg-primary/10 text-primary" : "bg-primary/10 text-primary")
+                        : (selected ? "bg-surface-container/90 text-on-surface-variant" : "bg-background/90 text-on-surface-variant")
+                )}>
+                    {note.isPublic ? (
+                        <>
+                            <Globe className="w-3 h-3" />
+                        </>
+                    ) : (
+                        <>
+                            <Lock className="w-3 h-3" />
+                        </>
+                    )}
+                </div>
             </div>
 
             {/* State Layer (Overlay on hover) */}

@@ -85,7 +85,9 @@ export function NoteList({
         try {
             const params = new URLSearchParams();
             const currentQ = new URLSearchParams(window.location.search).get("q");
+            const currentPrivacy = new URLSearchParams(window.location.search).get("privacy");
             if (currentQ) params.set("q", currentQ);
+            if (currentPrivacy) params.set("privacy", currentPrivacy);
             params.set("offset", offset.toString());
 
             const res = await fetch(`/api-notes?${params.toString()}`);

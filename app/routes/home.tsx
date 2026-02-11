@@ -1,5 +1,5 @@
-import { count, desc, like, or, sql } from "drizzle-orm";
-import { LogOut, Plus } from "lucide-react";
+import { and, count, desc, eq, like, or, sql } from "drizzle-orm";
+import { Globe, LayoutGrid, Lock, LogOut, Pen, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Form, Link, useActionData, useSearchParams, useSubmit } from "react-router";
 import { NoteList } from "../components/NoteList";
@@ -7,6 +7,7 @@ import { ThemeToggle } from "../components/theme-toggle";
 import { AppBar } from "../components/ui/AppBar";
 import { Button } from "../components/ui/Button";
 import { SearchBar } from "../components/ui/Input";
+import { SegmentedButton } from "../components/ui/SegmentedButton";
 import { useUI } from "../components/ui/UIProvider";
 import { notes } from "../drizzle/schema";
 import { getDB } from "../services/db.server";
@@ -25,6 +26,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const db = getDB(context.cloudflare.env);
   const url = new URL(request.url);
   const q = url.searchParams.get("q");
+  const privacy = url.searchParams.get("privacy") || "all";
   const offset = parseInt(url.searchParams.get("offset") || "0", 10);
   const limit = 24;
 
@@ -33,18 +35,31 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     title: notes.title,
     createdAt: notes.createdAt,
     slug: notes.slug,
+    isPublic: notes.isPublic,
     excerpt: sql<string>`SUBSTR(${notes.content}, 1, 200)`
   }).from(notes).$dynamic();
 
   let countQuery = db.select({ value: count() }).from(notes).$dynamic();
 
+  const conditions = [];
+
   if (q) {
-    const filters = or(
+    conditions.push(or(
       like(notes.title, `%${q}%`),
       like(notes.content, `%${q}%`)
-    );
-    query = query.where(filters);
-    countQuery = countQuery.where(filters);
+    ));
+  }
+
+  if (privacy === "public") {
+    conditions.push(eq(notes.isPublic, true));
+  } else if (privacy === "private") {
+    conditions.push(eq(notes.isPublic, false));
+  }
+
+  if (conditions.length > 0) {
+    const combined = conditions.length > 1 ? and(...conditions) : conditions[0];
+    query = query.where(combined!);
+    countQuery = countQuery.where(combined!);
   }
 
   const [resultNotes, totalCountResult] = await Promise.all([
@@ -64,10 +79,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       title: n.title || "Untitled",
       excerpt: n.excerpt?.replace(/[#*`]/g, '') || "",
       date: n.createdAt ? new Date(n.createdAt).toISOString() : new Date().toISOString(),
-      slug: n.slug
+      slug: n.slug,
+      isPublic: !!n.isPublic
     })),
     totalNotes,
     q: q || "",
+    privacy,
     hasMore,
     nextOffset: offset + resultNotes.length
   };
@@ -147,6 +164,18 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     setQ(e.target.value);
   };
 
+  const [privacy, setPrivacy] = useState(loaderData.privacy);
+
+  useEffect(() => {
+    if (privacy === loaderData.privacy) return;
+
+    const params = new URLSearchParams(window.location.search);
+    if (privacy && privacy !== "all") params.set("privacy", privacy);
+    else params.delete("privacy");
+    params.delete("offset");
+    submit(params, { replace: true });
+  }, [privacy, submit, loaderData.privacy]);
+
   return (
     <div className="flex flex-col h-screen bg-background text-on-background">
       {/* App Bar / Toolbar - Hidden in Selection Mode */}
@@ -176,8 +205,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 <Link to="/new">
                   <Button
                     variant="tonal"
-                    className="rounded-xl h-10 px-4 flex items-center gap-2 font-medium"
-                    icon={<Plus className="w-5 h-5" />}
+                    className="rounded-xl h-11 px-4 flex items-center gap-2 font-medium"
+                    icon={<Pen className="w-5 h-5" />}
                   >
                     New
                   </Button>
@@ -212,18 +241,33 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           containerRef={containerRef}
           onSelectionModeChange={setIsSelectionMode}
         >
-          {/* Mobile Search - Scrollable with notes */}
-          <div className="md:hidden p-4 bg-background border-b border-outline-variant/10">
-            <Form method="get" action="/">
-              <SearchBar
-                className="h-14"
-                name="q"
-                value={q}
-                placeholder="Search notes"
-                onChange={handleSearch}
-                onClear={() => setQ("")}
-              />
-            </Form>
+          {/* Header area for search/filters */}
+          <div className="max-w-7xl mx-auto w-full px-4 md:px-6 pt-4 md:pt-6 flex flex-col md:flex-row md:items-center md:justify-end gap-4">
+            {/* Mobile Search */}
+            <div className="md:hidden w-full">
+              <Form method="get" action="/">
+                <SearchBar
+                  className="h-14"
+                  name="q"
+                  value={q}
+                  placeholder="Search notes"
+                  onChange={handleSearch}
+                  onClear={() => setQ("")}
+                />
+              </Form>
+            </div>
+
+
+            <SegmentedButton
+              value={privacy}
+              onChange={setPrivacy}
+              className="w-full md:w-auto"
+              options={[
+                { label: "All", value: "all", icon: <LayoutGrid className="w-4 h-4" /> },
+                { label: "Private", value: "private", icon: <Lock className="w-4 h-4" /> },
+                { label: "Public", value: "public", icon: <Globe className="w-4 h-4" /> },
+              ]}
+            />
           </div>
         </NoteList>
       </div>

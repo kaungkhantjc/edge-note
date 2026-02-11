@@ -20,14 +20,14 @@ export function Button({
     children,
     ...props
 }: ButtonProps) {
-    const baseStyles = "inline-flex items-center justify-center font-medium transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none active:scale-95";
+    const baseStyles = "cursor-pointer inline-flex items-center justify-center font-medium transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none active:scale-95";
 
     const variants = {
         filled: "bg-primary text-on-primary hover:shadow-md hover:bg-primary/90 rounded-full shadow-sm",
         tonal: "bg-secondary-container text-on-secondary-container hover:shadow-sm hover:bg-secondary-container/80 rounded-full",
         outlined: "border border-outline text-primary hover:bg-primary/10 hover:border-primary rounded-full",
         text: "text-primary hover:bg-primary/10 rounded-full px-3",
-        icon: "text-on-surface-variant hover:bg-on-surface-variant/10 rounded-full p-2 aspect-square",
+        icon: "text-on-surface-variant hover:bg-surface-container-high rounded-full p-2 aspect-square",
     };
 
     const sizes = {
