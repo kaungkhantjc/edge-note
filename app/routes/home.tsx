@@ -172,16 +172,27 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           startAction={null}
           endAction={
             <div className="flex items-center gap-2">
-              <div className="w-full max-w-md hidden md:block mr-2">
-                <Form method="get" action="/">
-                  <SearchBar
-                    name="q"
-                    value={q}
-                    placeholder="Search your notes"
-                    onChange={handleSearch}
-                    onClear={() => setQ("")}
-                  />
-                </Form>
+              <div className="hidden md:flex items-center gap-3 mr-2">
+                <Link to="/new">
+                  <Button
+                    variant="tonal"
+                    className="rounded-xl h-10 px-4 flex items-center gap-2 font-medium"
+                    icon={<Plus className="w-5 h-5" />}
+                  >
+                    New
+                  </Button>
+                </Link>
+                <div className="w-64 lg:w-80">
+                  <Form method="get" action="/">
+                    <SearchBar
+                      name="q"
+                      value={q}
+                      placeholder="Search your notes"
+                      onChange={handleSearch}
+                      onClear={() => setQ("")}
+                    />
+                  </Form>
+                </div>
               </div>
               <ThemeToggle />
               <Form action="/logout" method="post">
@@ -217,12 +228,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </NoteList>
       </div>
 
-      {/* FAB */}
+      {/* FAB - Mobile Only */}
       {!isSelectionMode && (
-        <Link to="/new" className="fixed bottom-7 right-7 z-40">
+        <Link to="/new" className="fixed bottom-7 right-7 z-40 md:hidden">
           <Button
             variant="filled"
-            className="h-16 w-16 rounded-2xl bg-primary-container text-on-primary-container shadow-md hover:shadow-3 flex items-center justify-center p-0"
+            className="h-16 w-16 rounded-2xl bg-primary-container hover:bg-primary-container/80 text-on-primary-container shadow-md hover:shadow-3 flex items-center justify-center p-0"
             icon={<Plus className="w-8 h-8" />}
           />
         </Link>
