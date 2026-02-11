@@ -18,13 +18,13 @@ export function ThemeToggle() {
 
     return (
         <DropdownMenu trigger={renderTrigger()}>
-            <DropdownItem onClick={() => setTheme("light")} className={theme === "light" ? "bg-primary/10 text-primary" : ""}>
+            <DropdownItem onClick={() => setTheme("light")} className={theme === "light" ? "bg-primary-container hover:bg-primary-container/80 text-primary" : ""}>
                 <Sun className="mr-3 h-4 w-4" /> Light
             </DropdownItem>
-            <DropdownItem onClick={() => setTheme("dark")} className={theme === "dark" ? "bg-primary/10 text-primary" : ""}>
+            <DropdownItem onClick={() => setTheme("dark")} className={theme === "dark" ? "bg-primary-container hover:bg-primary-container/80 text-primary" : ""}>
                 <Moon className="mr-3 h-4 w-4" /> Dark
             </DropdownItem>
-            <DropdownItem onClick={() => setTheme("system")} className={theme === "system" ? "bg-primary/10 text-primary" : ""}>
+            <DropdownItem onClick={() => setTheme("system")} className={theme === "system" ? "bg-primary-container hover:bg-primary-container/80 text-primary" : ""}>
                 <Laptop className="mr-3 h-4 w-4" /> System
             </DropdownItem>
         </DropdownMenu>

@@ -48,9 +48,14 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const title = formData.get("title") as string;
     const slug = (formData.get("slug") as string | null)?.trim() || "";
     const content = formData.get("content") as string;
+    const isPublic = formData.get("isPublic") === "true";
 
     if (!content) {
         return { errors: { content: "Content is required" } };
+    }
+
+    if (!isPublic && !slug) {
+        return { errors: { slug: "Slug is required for private notes" } };
     }
 
     const db = getDB(context.cloudflare.env);
@@ -71,6 +76,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
                 title,
                 slug: slug || null,
                 content,
+                isPublic,
                 updatedAt: new Date()
             })
             .where(eq(notes.id, noteId));
@@ -100,6 +106,7 @@ export default function EditNote({ loaderData }: Route.ComponentProps) {
             initialTitle={note.title ?? undefined}
             initialSlug={note.slug || ""}
             initialContent={note.content}
+            initialIsPublic={!!note.isPublic}
             errors={actionData?.errors}
         />
     );

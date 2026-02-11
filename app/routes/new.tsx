@@ -19,9 +19,14 @@ export async function action({ request, context }: Route.ActionArgs) {
     const title = formData.get("title") as string;
     const slug = (formData.get("slug") as string | null)?.trim() || "";
     const content = formData.get("content") as string;
+    const isPublic = formData.get("isPublic") === "true";
 
     if (!content) {
         return { errors: { content: "Content is required" } };
+    }
+
+    if (!isPublic && !slug) {
+        return { errors: { slug: "Slug is required for private notes" } };
     }
 
     const db = getDB(context.cloudflare.env);
@@ -38,7 +43,7 @@ export async function action({ request, context }: Route.ActionArgs) {
             title,
             slug: slug || null,
             content,
-            isPublic: false
+            isPublic: isPublic
         }).returning({ id: notes.id });
 
         const newNote = result[0];
