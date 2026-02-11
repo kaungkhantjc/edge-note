@@ -1,7 +1,7 @@
 import { and, count, desc, eq, like, or, sql } from "drizzle-orm";
 import { Globe, LayoutGrid, Lock, LogOut, Pen, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Form, Link, useActionData, useSearchParams, useSubmit } from "react-router";
+import { Form, Link, useActionData, useFetcher, useSearchParams, useSubmit } from "react-router";
 import { NoteList } from "../components/NoteList";
 import { ThemeToggle } from "../components/theme-toggle";
 import { AppBar } from "../components/ui/AppBar";
@@ -10,9 +10,13 @@ import { SearchBar } from "../components/ui/Input";
 import { SegmentedButton } from "../components/ui/SegmentedButton";
 import { useUI } from "../components/ui/UIProvider";
 import { notes } from "../drizzle/schema";
+import { cn } from "../lib/utils";
+import { NoteCard, type Note } from "../components/NoteCard";
+import { useSelectionMode } from "../hooks/useSelection";
 import { getDB } from "../services/db.server";
 import { requireAuth } from "../services/session.server";
 import type { Route } from "./+types/home";
+import { Trash2, X } from "lucide-react";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -114,9 +118,30 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 export default function Home({ loaderData }: Route.ComponentProps) {
   const submit = useSubmit();
+  const fetcher = useFetcher<any>();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  // Lifted state: Notes accumulation for infinite scroll
+  const [notesList, setNotesList] = useState<Note[]>(loaderData.notes);
+
+  // Sync notes when search/loader changes
+  useEffect(() => {
+    setNotesList(loaderData.notes);
+  }, [loaderData.notes]);
+
+  // Lifted state: Selection
+  const selection = useSelectionMode({
+    items: notesList,
+    containerRef,
+    getItemId: (note) => note.id.toString(),
+  });
+
+  const {
+    isSelectionMode,
+    selectedIds,
+    clearSelection,
+    selectAll,
+  } = selection;
 
   // Search handler state and debounce
   const [q, setQ] = useState(loaderData.q || "");
@@ -136,7 +161,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     return () => clearTimeout(timer);
   }, [q, submit, loaderData.q]);
 
-  const { showSnackbar } = useUI();
+  const { showSnackbar, showModal } = useUI();
   const actionData = useActionData<{ success?: boolean }>();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -176,70 +201,144 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     submit(params, { replace: true });
   }, [privacy, submit, loaderData.privacy]);
 
+  const handleDelete = () => {
+    showModal({
+      title: `Delete ${selectedIds.size} notes?`,
+      description: `Are you sure you want to delete these ${selectedIds.size} notes? This action cannot be undone.`,
+      confirmText: "Delete",
+      isDestructive: true,
+      icon: <Trash2 className="w-6 h-6" />,
+      onConfirm: () => {
+        const formData = new FormData();
+        formData.append("intent", "delete_batch");
+        selectedIds.forEach(id => formData.append("id", id));
+        fetcher.submit(formData, { method: "post", action: "/?index" });
+        clearSelection();
+      }
+    });
+  };
+
+  // Handle successful deletion from fetcher
+  useEffect(() => {
+    if (fetcher.data?.success && fetcher.formData?.get("intent") === "delete_batch") {
+      const deletedIds = new Set(fetcher.formData.getAll("id").map(String));
+      setNotesList(prev => prev.filter(n => !deletedIds.has(String(n.id))));
+      // Re-trigger selection count update if needed (handled by selectedIds dependency)
+    }
+  }, [fetcher.data, fetcher.formData]);
+
   return (
-    <div className="flex flex-col h-screen bg-background text-on-background">
-      {/* App Bar / Toolbar - Hidden in Selection Mode */}
-      {!isSelectionMode && (
-        <AppBar
-          className="bg-surface-container/50 backdrop-blur-xl border-b-0 shadow-sm"
-          title={
-            <div className="flex gap-3 items-center">
-              <img src="/favicon.svg" alt="Edge Note" className="h-10 w-10" />
+    <div className="flex flex-col h-screen bg-background text-on-background overflow-hidden">
+      {/* Unified Header Container to avoid layout 'glitch' */}
+      <div className="relative h-18 md:h-16 shrink-0 z-50">
+        {/* Default App Bar */}
+        <div className={cn(
+          "absolute inset-0 transition-all duration-300 ease-in-out",
+          isSelectionMode ? "opacity-0 pointer-events-none -translate-y-2" : "opacity-100 translate-y-0"
+        )}>
+          <AppBar
+            className="bg-surface-container/50 backdrop-blur-xl border-b-0 shadow-sm"
+            title={
+              <div className="flex gap-3 items-center">
+                <img src="/favicon.svg" alt="Edge Note" className="h-10 w-10" />
+                <div className="flex flex-col">
+                  <span className="font-bold text-xl leading-tight tracking-tight text-primary">Edge Note</span>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-xs font-medium text-on-surface-variant/70 flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-primary/40" />
+                      {loaderData.totalNotes > 0
+                        ? `${loaderData.totalNotes} notes`
+                        : "0 notes"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            }
+            startAction={null}
+            endAction={
+              <div className="flex items-center gap-2">
+                <div className="hidden md:flex items-center gap-3 mr-2">
+                  <Link to="/new">
+                    <Button
+                      variant="tonal"
+                      className="rounded-xl h-11 px-4 flex items-center gap-2 font-medium"
+                      icon={<Pen className="w-5 h-5" />}
+                    >
+                      New
+                    </Button>
+                  </Link>
+                  <div className="w-64 lg:w-80">
+                    <Form method="get" action="/">
+                      <SearchBar
+                        name="q"
+                        value={q}
+                        placeholder="Search your notes"
+                        onChange={handleSearch}
+                        onClear={() => setQ("")}
+                      />
+                    </Form>
+                  </div>
+                </div>
+                <ThemeToggle />
+                <Form action="/logout" method="post">
+                  <Button variant="icon" icon={<LogOut className="w-5 h-5" />} title="Logout" />
+                </Form>
+              </div>
+            }
+          />
+        </div>
+
+        {/* Selection mode toolbar */}
+        <div className={cn(
+          "absolute inset-0 transition-all duration-300 ease-in-out",
+          !isSelectionMode ? "opacity-0 pointer-events-none translate-y-2" : "opacity-100 translate-y-0"
+        )}>
+          <div className="h-18 md:h-16 bg-surface-container/90 backdrop-blur-md px-4 border-b border-outline-variant/20 shadow-sm flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="icon"
+                onClick={clearSelection}
+                aria-label="Cancel selection"
+                icon={<X className="w-6 h-6" />}
+              />
+
               <div className="flex flex-col">
-                <span className="font-bold text-xl leading-tight tracking-tight text-primary">Edge Note</span>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className="text-xs font-medium text-on-surface-variant/70 flex items-center gap-1.5">
-                    <span className="w-1 h-1 rounded-full bg-primary/40" />
-                    {loaderData.totalNotes > 0
-                      ? `${loaderData.totalNotes} notes`
-                      : "0 notes"}
-                  </span>
-                </div>
+                <span className="text-lg font-medium text-on-surface">
+                  {selectedIds.size} selected
+                </span>
               </div>
             </div>
-          }
-          startAction={null}
-          endAction={
+
             <div className="flex items-center gap-2">
-              <div className="hidden md:flex items-center gap-3 mr-2">
-                <Link to="/new">
-                  <Button
-                    variant="tonal"
-                    className="rounded-xl h-11 px-4 flex items-center gap-2 font-medium"
-                    icon={<Pen className="w-5 h-5" />}
-                  >
-                    New
-                  </Button>
-                </Link>
-                <div className="w-64 lg:w-80">
-                  <Form method="get" action="/">
-                    <SearchBar
-                      name="q"
-                      value={q}
-                      placeholder="Search your notes"
-                      onChange={handleSearch}
-                      onClear={() => setQ("")}
-                    />
-                  </Form>
-                </div>
-              </div>
-              <ThemeToggle />
-              <Form action="/logout" method="post">
-                <Button variant="icon" icon={<LogOut className="w-5 h-5" />} title="Logout" />
-              </Form>
+              <Button
+                variant="text"
+                onClick={selectAll}
+                className="bg-transparent"
+              >
+                Select All
+              </Button>
+              <Button
+                variant="icon"
+                onClick={handleDelete}
+                disabled={selectedIds.size === 0}
+                title="Delete selected"
+                className="text-error hover:bg-error/10"
+                icon={<Trash2 className="w-6 h-6" />}
+              />
             </div>
-          }
-        />
-      )}
+          </div>
+        </div>
+      </div>
 
       {/* Main Content */}
       <div className="flex-1 w-full overflow-hidden flex flex-col relative">
         <NoteList
-          notes={loaderData.notes}
+          notes={notesList}
           hasMore={loaderData.hasMore}
           nextOffset={loaderData.nextOffset}
           containerRef={containerRef}
-          onSelectionModeChange={setIsSelectionMode}
+          selection={selection}
+          onDelete={handleDelete}
         >
           {/* Header area for search/filters */}
           <div className="max-w-7xl mx-auto w-full px-4 md:px-6 pt-4 md:pt-6 flex flex-col md:flex-row md:items-center md:justify-end gap-4">

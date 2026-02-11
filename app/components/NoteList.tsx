@@ -6,12 +6,15 @@ import { NoteCard, type Note } from './NoteCard';
 import { Button } from './ui/Button';
 import { useUI } from './ui/UIProvider';
 
+type SelectionResult = ReturnType<typeof useSelectionMode>;
+
 interface NoteListProps {
     notes: Note[];
     hasMore: boolean;
     nextOffset: number;
     containerRef: React.RefObject<HTMLDivElement | null>;
-    onSelectionModeChange?: (isSelectionMode: boolean) => void;
+    selection: SelectionResult;
+    onDelete?: () => void;
     children?: React.ReactNode;
 }
 
@@ -24,11 +27,12 @@ export function NoteList({
     hasMore: initialHasMore,
     nextOffset: initialOffset,
     containerRef,
-    onSelectionModeChange,
+    selection,
+    onDelete,
     children
 }: NoteListProps) {
     const fetcher = useFetcher<any>();
-    const { showSnackbar, showModal } = useUI();
+    const { showSnackbar } = useUI();
 
     // State for local accumulation of notes
     const [notes, setNotes] = useState<Note[]>(initialNotes);
@@ -38,12 +42,6 @@ export function NoteList({
     const [isError, setIsError] = useState(false);
     const sentinelRef = useRef<HTMLDivElement>(null);
 
-    const selection = useSelectionMode({
-        items: notes,
-        containerRef,
-        getItemId: (note) => note.id.toString(),
-    });
-
     const {
         isSelectionMode,
         selectedIds,
@@ -52,7 +50,6 @@ export function NoteList({
         toggleSelection,
         startSelectionMode,
         clearSelection,
-        selectAll,
     } = selection;
 
     // Reset list when initial notes change (e.g. on search)
@@ -143,11 +140,6 @@ export function NoteList({
         };
     }, [hasMore, isLoading, isError, fetchMore]);
 
-    // Notify parent of selection mode change
-    useEffect(() => {
-        onSelectionModeChange?.(isSelectionMode);
-    }, [isSelectionMode, onSelectionModeChange]);
-
     const handleNoteClick = useCallback((note: Note) => {
         if (isSelectionMode) {
             toggleSelection(note.id.toString());
@@ -164,63 +156,8 @@ export function NoteList({
         }
     }, [isSelectionMode, startSelectionMode, toggleSelection]);
 
-    const handleDelete = () => {
-        showModal({
-            title: `Delete ${selectedIds.size} notes?`,
-            description: `Are you sure you want to delete these ${selectedIds.size} notes? This action cannot be undone.`,
-            confirmText: "Delete",
-            isDestructive: true,
-            icon: <Trash2 className="w-6 h-6" />,
-            onConfirm: () => {
-                const formData = new FormData();
-                formData.append("intent", "delete_batch");
-                selectedIds.forEach(id => formData.append("id", id));
-                fetcher.submit(formData, { method: "post", action: "/?index" });
-                clearSelection();
-            }
-        });
-    };
-
     return (
         <div className="flex flex-col h-full w-full bg-background text-on-background relative">
-
-            {/* Selection Toolbar */}
-            {isSelectionMode && (
-                <div className="sticky top-0 z-50 h-18 md:h-16 bg-surface-container/90 backdrop-blur-md px-4 border-b border-outline-variant/20 shadow-sm flex items-center justify-between animate-in slide-in-from-top-2 duration-200">
-                    <div className="flex items-center gap-4">
-                        <Button
-                            variant="icon"
-                            onClick={clearSelection}
-                            aria-label="Cancel selection"
-                            icon={<X className="w-6 h-6" />}
-                        />
-
-                        <div className="flex flex-col">
-                            <span className="text-lg font-medium text-on-surface">
-                                {selectedIds.size} selected
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="text"
-                            onClick={selectAll}
-                            className="bg-transparent"
-                        >
-                            Select All
-                        </Button>
-                        <Button
-                            variant="icon"
-                            onClick={handleDelete}
-                            disabled={selectedIds.size === 0}
-                            title="Delete selected"
-                            className="text-error hover:bg-error/10"
-                            icon={<Trash2 className="w-6 h-6" />}
-                        />
-                    </div>
-                </div>
-            )}
 
             <div
                 className="flex-1 overflow-y-auto select-none relative scroll-smooth"
