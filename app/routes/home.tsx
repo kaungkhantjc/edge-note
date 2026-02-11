@@ -1,17 +1,14 @@
-import { desc, inArray, like, or, sql } from "drizzle-orm";
+import { count, desc, like, or, sql } from "drizzle-orm";
 import { LogOut, Plus } from "lucide-react";
-import { useRef, useState, useEffect } from "react";
-import { data, Form, Link, useSubmit, useFetcher } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import { Form, Link, useActionData, useSearchParams, useSubmit } from "react-router";
 import { NoteList } from "../components/NoteList";
-import { useTheme } from "../components/theme-provider";
 import { ThemeToggle } from "../components/theme-toggle";
 import { AppBar } from "../components/ui/AppBar";
 import { Button } from "../components/ui/Button";
 import { SearchBar } from "../components/ui/Input";
-import { useActionData, useSearchParams } from "react-router";
 import { useUI } from "../components/ui/UIProvider";
 import { notes } from "../drizzle/schema";
-import { useSelectionMode } from '../hooks/useSelection';
 import { getDB } from "../services/db.server";
 import { requireAuth } from "../services/session.server";
 import type { Route } from "./+types/home";
@@ -28,9 +25,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const db = getDB(context.cloudflare.env);
   const url = new URL(request.url);
   const q = url.searchParams.get("q");
-  const page = parseInt(url.searchParams.get("page") || "1", 10);
+  const offset = parseInt(url.searchParams.get("offset") || "0", 10);
   const limit = 24;
-  const offset = (page - 1) * limit;
 
   let query = db.select({
     id: notes.id,
@@ -40,17 +36,27 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     excerpt: sql<string>`SUBSTR(${notes.content}, 1, 200)`
   }).from(notes).$dynamic();
 
+  let countQuery = db.select({ value: count() }).from(notes).$dynamic();
+
   if (q) {
-    query = query.where(or(
+    const filters = or(
       like(notes.title, `%${q}%`),
       like(notes.content, `%${q}%`)
-    ));
+    );
+    query = query.where(filters);
+    countQuery = countQuery.where(filters);
   }
 
-  const resultNotes = await query
-    .orderBy(desc(notes.createdAt))
-    .limit(limit)
-    .offset(offset);
+  const [resultNotes, totalCountResult] = await Promise.all([
+    query
+      .orderBy(desc(notes.createdAt))
+      .limit(limit)
+      .offset(offset),
+    countQuery
+  ]);
+
+  const totalNotes = totalCountResult[0]?.value || 0;
+  const hasMore = offset + resultNotes.length < totalNotes;
 
   return {
     notes: resultNotes.map(n => ({
@@ -60,8 +66,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       date: n.createdAt ? new Date(n.createdAt).toISOString() : new Date().toISOString(),
       slug: n.slug
     })),
+    totalNotes,
     q: q || "",
-    page
+    hasMore,
+    nextOffset: offset + resultNotes.length
   };
 }
 
@@ -72,23 +80,19 @@ export async function action({ request, context }: Route.ActionArgs) {
   const db = getDB(context.cloudflare.env);
 
   if (intent === "delete_batch") {
-    const idsString = formData.get("ids");
-    if (typeof idsString === "string") {
-      try {
-        const ids = JSON.parse(idsString) as string[];
-        const numberIds = ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+    const ids = formData.getAll("id");
+    const numberIds = ids.map(id => parseInt(id as string, 10)).filter(id => !isNaN(id));
 
-        if (numberIds.length > 0) {
-          await db.delete(notes).where(inArray(notes.id, numberIds));
-        }
-      } catch (e) {
-        console.error("Failed to parse IDs for batch delete", e);
-      }
+    if (numberIds.length > 0) {
+      // Use raw SQL to bypass D1 parameter limits (max 100)
+      // Safe since we've parsed all IDs to numbers
+      const idsQuery = numberIds.join(",");
+      await db.run(sql.raw(`DELETE FROM notes WHERE id IN (${idsQuery})`));
     }
-    return data({ success: true });
+    return { success: true, deletedCount: numberIds.length };
   }
 
-  return data({ error: "Invalid intent" }, { status: 400 });
+  return { error: "Invalid intent" };
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
@@ -96,18 +100,20 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
+
   // Search handler state and debounce
   const [q, setQ] = useState(loaderData.q || "");
 
   useEffect(() => {
-    // Skip the first render if q matches loaderData.q
+    // Skip initial sync
     if (q === loaderData.q) return;
 
     const timer = setTimeout(() => {
-      submit(
-        { q },
-        { replace: loaderData.q !== "" }
-      );
+      const params = new URLSearchParams(window.location.search);
+      if (q) params.set("q", q);
+      else params.delete("q");
+      params.delete("index");
+      submit(params, { replace: true });
     }, 300);
 
     return () => clearTimeout(timer);
@@ -124,12 +130,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   }, [actionData, showSnackbar]);
 
   useEffect(() => {
-    if (searchParams.get("deleted") === "1") {
-      showSnackbar("Note deleted successfully");
-      // Remove the param without affecting history much
+    if (searchParams.has("deleted") || searchParams.has("index")) {
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
-        next.delete("deleted");
+        if (next.has("deleted")) {
+          showSnackbar("Note deleted successfully");
+          next.delete("deleted");
+        }
+        next.delete("index");
         return next;
       }, { replace: true });
     }
@@ -140,15 +148,25 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background text-on-background">
       {/* App Bar / Toolbar - Hidden in Selection Mode */}
       {!isSelectionMode && (
         <AppBar
           className="bg-surface-container/50 backdrop-blur-xl border-b-0 shadow-sm"
           title={
-            <div className="flex gap-2 items-center">
-              <img src="/favicon.svg" alt="Edge Note" className="h-8 w-8" />
-              <span className="font-bold text-2xl tracking-tight text-primary">Edge Note</span>
+            <div className="flex gap-3 items-center">
+              <img src="/favicon.svg" alt="Edge Note" className="h-10 w-10" />
+              <div className="flex flex-col">
+                <span className="font-bold text-xl leading-tight tracking-tight text-primary">Edge Note</span>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="text-xs font-medium text-on-surface-variant/70 flex items-center gap-1.5">
+                    <span className="w-1 h-1 rounded-full bg-primary/40" />
+                    {loaderData.totalNotes > 0
+                      ? `${loaderData.totalNotes} notes`
+                      : "0 notes"}
+                  </span>
+                </div>
+              </div>
             </div>
           }
           startAction={null}
@@ -176,9 +194,15 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
       {/* Main Content */}
       <div className="flex-1 w-full overflow-hidden flex flex-col relative">
-        {/* Mobile Search - Visible under AppBar on mobile */}
-        {!isSelectionMode && (
-          <div className="md:hidden p-4 bg-background sticky top-0 z-20">
+        <NoteList
+          notes={loaderData.notes}
+          hasMore={loaderData.hasMore}
+          nextOffset={loaderData.nextOffset}
+          containerRef={containerRef}
+          onSelectionModeChange={setIsSelectionMode}
+        >
+          {/* Mobile Search - Scrollable with notes */}
+          <div className="md:hidden p-4 bg-background border-b border-outline-variant/10">
             <Form method="get" action="/">
               <SearchBar
                 className="h-14"
@@ -190,21 +214,17 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               />
             </Form>
           </div>
-        )}
-
-        <NoteList
-          notes={loaderData.notes}
-          containerRef={containerRef}
-          onSelectionModeChange={setIsSelectionMode}
-        />
+        </NoteList>
       </div>
 
       {/* FAB */}
       {!isSelectionMode && (
         <Link to="/new" className="fixed bottom-7 right-7 z-40">
-          <button className="h-16 w-16 rounded-2xl bg-primary-container text-on-primary-container shadow-md hover:shadow-3 transition-all duration-300 flex items-center justify-center group active:scale-95">
-            <Plus className="w-8 h-8 group-hover:rotate-90 transition-transform duration-300" />
-          </button>
+          <Button
+            variant="filled"
+            className="h-16 w-16 rounded-2xl bg-primary-container text-on-primary-container shadow-md hover:shadow-3 flex items-center justify-center p-0"
+            icon={<Plus className="w-8 h-8" />}
+          />
         </Link>
       )}
     </div>

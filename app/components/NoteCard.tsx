@@ -17,7 +17,7 @@ interface NoteCardProps {
     className?: string;
 }
 
-export function NoteCard({
+export const NoteCard = React.memo(function NoteCard({
     note,
     selected,
     onClick,
@@ -26,6 +26,22 @@ export function NoteCard({
 }: NoteCardProps) {
     const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLongPressing = useRef(false);
+
+    // Memoize the formatted date to avoid expensive recalculation
+    const formattedDate = React.useMemo(() => {
+        try {
+            return new Date(note.date).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            }).replace(',', '');
+        } catch (e) {
+            return note.date;
+        }
+    }, [note.date]);
 
     const handleTouchStart = useCallback(() => {
         isLongPressing.current = false;
@@ -90,9 +106,9 @@ export function NoteCard({
             id={`note-card-${note.id}`}
             className={cn(
                 "group relative flex flex-col p-5 h-56 transition-all duration-300 rounded-3xl cursor-pointer overflow-hidden border border-transparent touch-manipulation select-none",
-                "note-card", // Added for event target identification if needed
+                "note-card transition-shadow duration-200",
                 selected
-                    ? "bg-secondary-container text-on-secondary-container ring-2 ring-primary border-primary"
+                    ? "bg-secondary-container text-on-secondary-container ring-2 ring-primary border-primary shadow-lg"
                     : "bg-surface-container-high hover:bg-surface-container hover:shadow-md text-on-surface border-none",
                 className
             )}
@@ -111,7 +127,7 @@ export function NoteCard({
                     {note.title}
                 </h3>
                 {selected && (
-                    <div className="bg-primary text-on-primary rounded-full p-1 shrink-0">
+                    <div className="bg-primary text-on-primary rounded-full p-1 shrink-0 animate-in zoom-in duration-200">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
@@ -125,14 +141,7 @@ export function NoteCard({
 
             <div className="mt-auto flex items-center justify-between pt-4">
                 <span className={cn("text-xs font-medium px-2.5 py-1 rounded-lg tracking-wide", selected ? "bg-primary/10 text-primary" : "bg-surface-container text-on-surface-variant")}>
-                    {new Date(note.date).toLocaleString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        hour12: true
-                    }).replace(',', '')}
+                    {formattedDate}
                 </span>
             </div>
 
@@ -140,4 +149,4 @@ export function NoteCard({
             {!selected && <div className="absolute inset-0 bg-on-surface opacity-0 group-hover:opacity-[0.08] pointer-events-none transition-opacity duration-200" />}
         </div>
     );
-}
+});

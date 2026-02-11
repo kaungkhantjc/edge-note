@@ -7,12 +7,17 @@ export default [
         file: "routes/login.tsx",
     },
     {
+        path: "logout",
+        file: "routes/logout.tsx",
+    },
+    {
         path: "new",
         file: "routes/new.tsx",
     },
+
     {
-        path: "logout",
-        file: "routes/logout.tsx",
+        path: "api-notes",
+        file: "routes/api-notes.tsx",
     },
     {
         path: ":id",
