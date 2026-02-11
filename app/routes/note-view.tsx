@@ -1,7 +1,8 @@
 import { eq } from "drizzle-orm";
-import { ArrowLeft, Globe, Lock, MoreVertical, Pen, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, Globe, Lock, MoreVertical, Pen, Trash2 } from "lucide-react";
 import { data, Link, redirect, useSubmit } from "react-router";
 import { NotePublicViewer } from "../components/NotePublicViewer";
+import { ButtonGroup } from "../components/ui/ButtonGroup";
 import { AppBar } from "../components/ui/AppBar";
 import { Button } from "../components/ui/Button";
 import { DropdownItem, DropdownMenu } from "../components/ui/DropdownMenu";
@@ -79,6 +80,19 @@ export default function NoteView({ loaderData }: Route.ComponentProps) {
         });
     }
 
+    const { showSnackbar } = useUI();
+    const publicUrl = note.slug ? `/s/${note.slug}` : "";
+
+    const handleCopyLink = () => {
+        const fullUrl = `${window.location.origin}${publicUrl}`;
+        navigator.clipboard.writeText(fullUrl);
+        showSnackbar("Link copied to clipboard");
+    }
+
+    const handleOpenLink = () => {
+        window.open(publicUrl, '_blank');
+    }
+
     const formatDate = (date: Date | string | number | null) => {
         if (!date) return "N/A";
         return new Date(date).toLocaleString('en-US', {
@@ -106,7 +120,25 @@ export default function NoteView({ loaderData }: Route.ComponentProps) {
                 endAction={
                     <div className="flex items-center gap-2">
                         {/* Desktop Actions */}
-                        <div className="hidden md:flex gap-2">
+                        <div className="hidden md:flex items-center gap-2">
+                            {note.isPublic && note.slug && (
+                                <ButtonGroup className="mr-2">
+                                    <Button
+                                        variant="icon"
+                                        icon={<Copy className="w-4 h-4" />}
+                                        title="Copy shareable link"
+                                        onClick={handleCopyLink}
+                                        className="px-6!"
+                                    />
+                                    <Button
+                                        variant="icon"
+                                        icon={<ExternalLink className="w-4 h-4" />}
+                                        title="Open shareable link"
+                                        onClick={handleOpenLink}
+                                        className="px-6!"
+                                    />
+                                </ButtonGroup>
+                            )}
                             <Link to={`/${note.id}/edit`}>
                                 <Button variant="filled" icon={<Pen className="w-4 h-4" />}>Edit</Button>
                             </Link>
@@ -121,6 +153,17 @@ export default function NoteView({ loaderData }: Route.ComponentProps) {
                                 <Button variant="icon" icon={<Pen className="w-5 h-5" />} />
                             </Link>
                             <DropdownMenu trigger={<Button variant="icon" icon={<MoreVertical className="w-5 h-5" />} />}>
+                                {note.isPublic && note.slug && (
+                                    <>
+                                        <DropdownItem onClick={handleCopyLink}>
+                                            <Copy className="w-4 h-4 mr-2" /> Copy Link
+                                        </DropdownItem>
+                                        <DropdownItem onClick={handleOpenLink}>
+                                            <ExternalLink className="w-4 h-4 mr-2" /> View Publicly
+                                        </DropdownItem>
+                                        <div className="h-px bg-outline-variant/30 my-1 mx-2" />
+                                    </>
+                                )}
                                 <DropdownItem onClick={handleDelete}>
                                     <Trash2 className="w-4 h-4 mr-2" /> Delete
                                 </DropdownItem>
