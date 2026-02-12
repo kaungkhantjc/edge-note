@@ -41,13 +41,6 @@ export default async function handleRequest(
   responseHeaders.set("Referrer-Policy", "strict-origin-when-cross-origin");
   responseHeaders.set("X-XSS-Protection", "1; mode=block");
 
-  // Basic CSP - adjust as needed for external resources
-  // Note: 'unsafe-inline' for style-src is often needed for React/Tailwind/Editor
-  responseHeaders.set(
-    "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self';"
-  );
-
   return new Response(body, {
     headers: responseHeaders,
     status: responseStatusCode,
