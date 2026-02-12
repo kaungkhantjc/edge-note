@@ -1,11 +1,10 @@
-import { eq, and } from "drizzle-orm";
-import { data } from "react-router";
-import { AppBar } from "../components/ui/AppBar";
+import { and, eq } from "drizzle-orm";
 import { NotePublicViewer } from "../components/NotePublicViewer";
+import { ThemeToggle } from "../components/theme-toggle";
+import { AppBar } from "../components/ui/AppBar";
 import { notes } from "../drizzle/schema";
 import { getDB } from "../services/db.server";
 import type { Route } from "./+types/note-public-view";
-import { ThemeToggle } from "../components/theme-toggle";
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data || !data.note) {

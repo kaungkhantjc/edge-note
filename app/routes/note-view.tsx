@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { ArrowLeft, Copy, ExternalLink, Globe, Lock, MoreVertical, Pen, Trash2 } from "lucide-react";
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { data, Link, redirect, useSubmit } from "react-router";
 import { NotePublicViewer } from "../components/NotePublicViewer";
 import { ThemeToggle } from "../components/theme-toggle";
@@ -13,24 +13,7 @@ import { notes } from "../drizzle/schema";
 import { getDB } from "../services/db.server";
 import { requireAuth } from "../services/session.server";
 import type { Route } from "./+types/note-view";
-
-const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-});
-
-const formatDate = (date: Date | string | number | null) => {
-    if (!date) return "N/A";
-    try {
-        return DATE_FORMATTER.format(new Date(date)).replace(',', '');
-    } catch (e) {
-        return "N/A";
-    }
-};
+import { formatDate } from "~/lib/date";
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data || !data.note) {

@@ -1,10 +1,10 @@
-import { Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useFetcher, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { useSelectionMode } from '../hooks/useSelection';
 import { NoteCard, type Note } from './NoteCard';
-import { Button } from './ui/Button';
-import { useUI } from './ui/UIProvider';
+import { NoteListSkeleton } from './NoteListSkeleton';
+import { NoteListEmptyState } from './NoteListEmptyState';
+import { NoteListErrorState } from './NoteListErrorState';
 
 type SelectionResult = ReturnType<typeof useSelectionMode>;
 
@@ -18,10 +18,6 @@ interface NoteListProps {
     onLoadMore: (newNotes: Note[], hasMore: boolean, nextOffset: number) => void;
     children?: React.ReactNode;
 }
-
-const SkeletonCard = () => (
-    <div className="h-56 rounded-3xl bg-surface-container-high animate-pulse border border-transparent shadow-sm" />
-);
 
 export function NoteList({
     notes,
@@ -108,7 +104,7 @@ export function NoteList({
         } else {
             navigate(`/${note.id}`, { viewTransition: true });
         }
-    }, [isSelectionMode, toggleSelection]);
+    }, [isSelectionMode, toggleSelection, navigate]);
 
     const handleNoteLongPress = useCallback((note: Note) => {
         if (!isSelectionMode) {
@@ -120,7 +116,6 @@ export function NoteList({
 
     return (
         <div className="flex flex-col h-full w-full bg-background text-on-background relative">
-
             <div
                 className="flex-1 overflow-y-auto select-none relative scroll-smooth"
                 ref={containerRef}
@@ -140,43 +135,15 @@ export function NoteList({
                     ))}
 
                     {notes.length === 0 && !isLoading && !isError && (
-                        <div className="col-span-full flex flex-col items-center justify-center p-12 text-on-surface-variant/50">
-                            <div className="w-24 h-24 rounded-full bg-surface-container-high mb-4 flex items-center justify-center">
-                                <span className="text-4xl">
-                                    <img src="/favicon.svg" alt="Logo" className="w-12 h-12" />
-                                </span>
-                            </div>
-                            <p className="text-lg">No notes found.</p>
-                            <p className="text-sm">Create one to get started!</p>
-                        </div>
+                        <NoteListEmptyState />
                     )}
 
                     {/* Sentinel / Footer Area */}
                     {(hasMore || isError) && (
                         <div ref={sentinelRef} className="col-span-full pb-8 pt-0 flex flex-col items-center justify-center min-h-25">
-                            {isLoading && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-4 w-full">
-                                    {Array.from({ length: 4 }).map((_, i) => (
-                                        <SkeletonCard key={i} />
-                                    ))}
-                                </div>
-                            )}
-
+                            {isLoading && <NoteListSkeleton />}
                             {isError && !isLoading && (
-                                <div className="mt-2 w-full flex flex-col items-center gap-3 p-8 bg-surface-container rounded-3xl border border-outline-variant/20 shadow-sm animate-in fade-in zoom-in-95 duration-300">
-                                    <div className="text-error mb-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-                                    </div>
-                                    <p className="text-on-surface font-semibold">Connection failed</p>
-                                    <p className="text-sm text-on-surface-variant max-w-50 text-center">Couldn't load more notes. Please check your network.</p>
-                                    <Button
-                                        variant="tonal"
-                                        onClick={() => fetchMore()}
-                                        className="mt-2 min-w-30"
-                                    >
-                                        Retry
-                                    </Button>
-                                </div>
+                                <NoteListErrorState onRetry={fetchMore} />
                             )}
                         </div>
                     )}

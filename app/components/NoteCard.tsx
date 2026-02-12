@@ -1,6 +1,7 @@
-import React, { useRef, useCallback } from "react";
+import React, { useRef, useCallback, useMemo } from "react";
 import { Globe, Lock } from "lucide-react";
 import { cn } from "../lib/utils";
+import { formatDate } from "~/lib/date";
 
 export interface Note {
     id: string | number;
@@ -30,20 +31,7 @@ export const NoteCard = React.memo(function NoteCard({
     const isLongPressing = useRef(false);
 
     // Memoize the formatted date to avoid expensive recalculation
-    const formattedDate = React.useMemo(() => {
-        try {
-            return new Date(note.date).toLocaleString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-            }).replace(',', '');
-        } catch (e) {
-            return note.date;
-        }
-    }, [note.date]);
+    const formattedDate = useMemo(() => formatDate(note.date), [note.date]);
 
     const handleTouchStart = useCallback(() => {
         isLongPressing.current = false;

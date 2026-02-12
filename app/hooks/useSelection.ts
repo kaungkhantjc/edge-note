@@ -1,16 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-
-interface Point {
-    x: number;
-    y: number;
-}
-
-interface SelectionBox {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-}
+import { type Point, type SelectionBox, calculateBox, isIntersecting } from "./use-selection-utils";
 
 interface UseSelectionModeProps<T> {
     items: T[];
@@ -27,7 +16,6 @@ export function useSelectionMode<T>({ items, containerRef, getItemId }: UseSelec
     const dragStartPoint = useRef<Point | null>(null);
     const previousSelection = useRef<Set<string>>(new Set());
 
-    // Toggle selection for a single item
     const toggleSelection = useCallback((id: string) => {
         setSelectedIds((prev) => {
             const newSet = new Set(prev);
@@ -37,14 +25,11 @@ export function useSelectionMode<T>({ items, containerRef, getItemId }: UseSelec
                 newSet.add(id);
             }
 
-            if (newSet.size === 0) {
-                setIsSelectionMode(false);
-            }
+            if (newSet.size === 0) setIsSelectionMode(false);
             return newSet;
         });
     }, []);
 
-    // Enter selection mode with an initial item selected
     const startSelectionMode = useCallback((id: string) => {
         setIsSelectionMode(true);
         setSelectedIds(new Set([id]));
@@ -62,18 +47,14 @@ export function useSelectionMode<T>({ items, containerRef, getItemId }: UseSelec
         setIsSelectionMode(true);
     }, [items, getItemId]);
 
-
-    // Mouse Event Handlers for Drag Selection
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
-        // Only trigger if clicking on the background (container) directly, not a card or interactive element
         if ((e.target as HTMLElement).closest('.note-card') ||
             (e.target as HTMLElement).closest('button') ||
             (e.target as HTMLElement).closest('a')) {
             return;
         }
 
-        if (e.button !== 0) return; // Only left click
-
+        if (e.button !== 0) return;
         if (!containerRef.current) return;
 
         const containerRect = containerRef.current.getBoundingClientRect();
@@ -83,19 +64,16 @@ export function useSelectionMode<T>({ items, containerRef, getItemId }: UseSelec
         isDragging.current = true;
         dragStartPoint.current = { x, y };
 
-        // Clear selection if not holding Shift/Ctrl
         if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
             setSelectedIds(new Set());
             previousSelection.current = new Set();
-            // Don't exit selection mode immediately if we want to allow "drag to select" to be the mode starter
-            // But requirements say "Clicking the background clears selection" (implies exit).
             setIsSelectionMode(false);
         } else {
             previousSelection.current = new Set(selectedIds);
         }
 
         setSelectionBox({ x, y, width: 0, height: 0 });
-        e.preventDefault(); // Prevent text selection
+        e.preventDefault();
     }, [containerRef, selectedIds]);
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -105,28 +83,17 @@ export function useSelectionMode<T>({ items, containerRef, getItemId }: UseSelec
         const currentX = e.clientX - containerRect.left + containerRef.current.scrollLeft;
         const currentY = e.clientY - containerRect.top + containerRef.current.scrollTop;
 
-        // Calculate box
-        const startX = Math.min(dragStartPoint.current.x, currentX);
-        const startY = Math.min(dragStartPoint.current.y, currentY);
-        const width = Math.abs(currentX - dragStartPoint.current.x);
-        const height = Math.abs(currentY - dragStartPoint.current.y);
+        const box = calculateBox(dragStartPoint.current, { x: currentX, y: currentY });
+        setSelectionBox(box);
 
-        const newBox = { x: startX, y: startY, width, height };
-        setSelectionBox(newBox);
-
-        // Calculate intersections
-        // Note: We need screen coordinates for intersection content, but the box is relative to container scroll.
-        // Let's rely on standard getBoundingClientRect for both.
-
-        // Box in client coordinates
-        const boxClientLeft = containerRect.left + startX - containerRef.current.scrollLeft;
-        const boxClientTop = containerRect.top + startY - containerRef.current.scrollTop;
+        const boxClientLeft = containerRect.left + box.x - containerRef.current.scrollLeft;
+        const boxClientTop = containerRect.top + box.y - containerRef.current.scrollTop;
 
         const boxRect = {
             left: boxClientLeft,
             top: boxClientTop,
-            right: boxClientLeft + width,
-            bottom: boxClientTop + height
+            right: boxClientLeft + box.width,
+            bottom: boxClientTop + box.height
         };
 
         const newSelectedIds = new Set(previousSelection.current);
@@ -136,29 +103,19 @@ export function useSelectionMode<T>({ items, containerRef, getItemId }: UseSelec
             const element = document.getElementById(`note-card-${id}`);
             if (element) {
                 const itemRect = element.getBoundingClientRect();
-
-                const isIntersecting = !(
-                    boxRect.right < itemRect.left ||
-                    boxRect.left > itemRect.right ||
-                    boxRect.bottom < itemRect.top ||
-                    boxRect.top > itemRect.bottom
-                );
-
-                if (isIntersecting) {
+                if (isIntersecting(boxRect, itemRect)) {
                     newSelectedIds.add(id);
                 } else if (!previousSelection.current.has(id)) {
-                    // If it was not previously selected, remove it (it might have been added in a previous move event)
                     newSelectedIds.delete(id);
                 }
             }
         });
 
-        if (newSelectedIds.size > 0 || isSelectionMode) { // Only update if we have selections or were already in mode
+        if (newSelectedIds.size > 0 || isSelectionMode) {
             setSelectedIds(newSelectedIds);
             if (newSelectedIds.size > 0) setIsSelectionMode(true);
         }
-
-    }, [items, getItemId, isSelectionMode, previousSelection, containerRef]); // Added containerRef to dependency array
+    }, [items, getItemId, isSelectionMode, containerRef]);
 
     const handleMouseUp = useCallback(() => {
         isDragging.current = false;
@@ -166,7 +123,6 @@ export function useSelectionMode<T>({ items, containerRef, getItemId }: UseSelec
         setSelectionBox(null);
     }, []);
 
-    // Global event listeners
     useEffect(() => {
         window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('mouseup', handleMouseUp);

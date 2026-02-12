@@ -1,22 +1,19 @@
 import { and, count, desc, eq, like, or, sql } from "drizzle-orm";
-import { Globe, LayoutGrid, Lock, LogOut, Pen, Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Form, Link, useActionData, useFetcher, useSearchParams, useSubmit } from "react-router";
+import { useActionData, useFetcher, useSearchParams, useSubmit } from "react-router";
+import { HomeHeader } from "../components/HomeHeader";
 import { NoteList } from "../components/NoteList";
-import { ThemeToggle } from "../components/theme-toggle";
-import { AppBar } from "../components/ui/AppBar";
-import { Button } from "../components/ui/Button";
-import { SearchBar } from "../components/ui/Input";
-import { SegmentedButton } from "../components/ui/SegmentedButton";
+import { SelectionToolbar } from "../components/SelectionToolbar";
 import { useUI } from "../components/ui/UIProvider";
 import { notes } from "../drizzle/schema";
-import { cn } from "../lib/utils";
-import { NoteCard, type Note } from "../components/NoteCard";
 import { useSelectionMode } from "../hooks/useSelection";
 import { getDB } from "../services/db.server";
 import { requireAuth } from "../services/session.server";
 import type { Route } from "./+types/home";
-import { Trash2, X } from "lucide-react";
+import type { Note } from "../components/NoteCard";
+import { Link } from "react-router";
+import { Button } from "../components/ui/Button";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -105,8 +102,6 @@ export async function action({ request, context }: Route.ActionArgs) {
     const numberIds = ids.map(id => parseInt(id as string, 10)).filter(id => !isNaN(id));
 
     if (numberIds.length > 0) {
-      // Use json_each to safely handle a large number of IDs with a single parameter.
-      // This bypasses D1's 100-parameter limit and is safer than string joining.
       await db.delete(notes).where(
         sql`id IN (SELECT value FROM json_each(${JSON.stringify(numberIds)}))`
       );
@@ -122,12 +117,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher<any>();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Lifted state: Notes accumulation for infinite scroll
   const [notesList, setNotesList] = useState<Note[]>(loaderData.notes);
   const [hasMore, setHasMore] = useState(loaderData.hasMore);
   const [nextOffset, setNextOffset] = useState(loaderData.nextOffset);
 
-  // Sync notes when search/loader changes (e.g. initial load or search query update)
   useEffect(() => {
     setNotesList(loaderData.notes);
     setHasMore(loaderData.hasMore);
@@ -144,37 +137,37 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     setNextOffset(serverNextOffset);
   }, []);
 
-  // Lifted state: Selection
   const selection = useSelectionMode({
     items: notesList,
     containerRef,
     getItemId: (note) => note.id.toString(),
   });
 
-  const {
-    isSelectionMode,
-    selectedIds,
-    clearSelection,
-    selectAll,
-  } = selection;
+  const { isSelectionMode, selectedIds, clearSelection, selectAll } = selection;
 
-  // Search handler state and debounce
   const [q, setQ] = useState(loaderData.q || "");
+  const [privacy, setPrivacy] = useState(loaderData.privacy);
 
   useEffect(() => {
-    // Skip initial sync
     if (q === loaderData.q) return;
-
     const timer = setTimeout(() => {
       const params = new URLSearchParams(window.location.search);
       if (q) params.set("q", q);
       else params.delete("q");
-      params.delete("index");
+      params.delete("offset");
       submit(params, { replace: true });
     }, 300);
-
     return () => clearTimeout(timer);
   }, [q, submit, loaderData.q]);
+
+  useEffect(() => {
+    if (privacy === loaderData.privacy) return;
+    const params = new URLSearchParams(window.location.search);
+    if (privacy && privacy !== "all") params.set("privacy", privacy);
+    else params.delete("privacy");
+    params.delete("offset");
+    submit(params, { replace: true });
+  }, [privacy, submit, loaderData.privacy]);
 
   const { showSnackbar, showModal } = useUI();
   const actionData = useActionData<{ success?: boolean }>();
@@ -187,34 +180,15 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   }, [actionData, showSnackbar]);
 
   useEffect(() => {
-    if (searchParams.has("deleted") || searchParams.has("index")) {
+    if (searchParams.has("deleted")) {
+      showSnackbar("Note deleted successfully");
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
-        if (next.has("deleted")) {
-          showSnackbar("Note deleted successfully");
-          next.delete("deleted");
-        }
-        next.delete("index");
+        next.delete("deleted");
         return next;
       }, { replace: true });
     }
   }, [searchParams, showSnackbar, setSearchParams]);
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQ(e.target.value);
-  };
-
-  const [privacy, setPrivacy] = useState(loaderData.privacy);
-
-  useEffect(() => {
-    if (privacy === loaderData.privacy) return;
-
-    const params = new URLSearchParams(window.location.search);
-    if (privacy && privacy !== "all") params.set("privacy", privacy);
-    else params.delete("privacy");
-    params.delete("offset");
-    submit(params, { replace: true });
-  }, [privacy, submit, loaderData.privacy]);
 
   const handleDelete = () => {
     showModal({
@@ -227,128 +201,32 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         const formData = new FormData();
         formData.append("intent", "delete_batch");
         selectedIds.forEach(id => formData.append("id", id));
-        fetcher.submit(formData, { method: "post", action: "/?index" });
+        fetcher.submit(formData, { method: "post" });
         clearSelection();
       }
     });
   };
 
-  // Handle successful deletion from fetcher
-  useEffect(() => {
-    if (fetcher.data?.success && fetcher.formData?.get("intent") === "delete_batch") {
-      const deletedIds = new Set(fetcher.formData.getAll("id").map(String));
-      setNotesList(prev => prev.filter(n => !deletedIds.has(String(n.id))));
-      // Re-trigger selection count update if needed (handled by selectedIds dependency)
-    }
-  }, [fetcher.data, fetcher.formData]);
-
   return (
-    <div
-      className="flex flex-col h-screen bg-background text-on-background overflow-hidden"
-      style={{ viewTransitionName: 'home-page' }}
-    >
-      {/* Unified Header Container to avoid layout 'glitch' */}
+    <div className="flex flex-col h-screen bg-background text-on-background overflow-hidden" style={{ viewTransitionName: 'home-page' }}>
       <div className="relative h-18 md:h-16 shrink-0 z-50">
-        {/* Default App Bar */}
-        <div className={cn(
-          "absolute inset-0 transition-all duration-300 ease-in-out",
-          isSelectionMode ? "opacity-0 pointer-events-none -translate-y-2" : "opacity-100 translate-y-0"
-        )}>
-          <AppBar
-            className="bg-surface-container/50 backdrop-blur-xl border-b-0 shadow-sm"
-            title={
-              <div className="flex gap-3 items-center">
-                <img src="/favicon.svg" alt="Edge Note" className="h-10 w-10" />
-                <div className="flex flex-col">
-                  <span className="font-bold text-xl leading-tight tracking-tight text-primary">Edge Note</span>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <span className="text-xs font-medium text-on-surface-variant/70 flex items-center gap-1.5">
-                      <span className="w-1 h-1 rounded-full bg-primary/40" />
-                      {loaderData.totalNotes > 0
-                        ? `${loaderData.totalNotes} notes`
-                        : "0 notes"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            }
-            startAction={null}
-            endAction={
-              <div className="flex items-center gap-2">
-                <div className="hidden md:flex items-center gap-3 mr-2">
-                  <Link to="/new" viewTransition>
-                    <Button
-                      variant="tonal"
-                      className="rounded-xl h-11 px-4 flex items-center gap-2 font-medium"
-                      icon={<Pen className="w-5 h-5" />}
-                    >
-                      New
-                    </Button>
-                  </Link>
-                  <div className="w-64 lg:w-80">
-                    <Form method="get" action="/">
-                      <SearchBar
-                        name="q"
-                        value={q}
-                        placeholder="Search your notes"
-                        onChange={handleSearch}
-                        onClear={() => setQ("")}
-                      />
-                    </Form>
-                  </div>
-                </div>
-                <ThemeToggle />
-                <Form action="/logout" method="post">
-                  <Button variant="icon" icon={<LogOut className="w-5 h-5" />} title="Logout" />
-                </Form>
-              </div>
-            }
-          />
-        </div>
+        <HomeHeader
+          isVisible={!isSelectionMode}
+          totalNotes={loaderData.totalNotes}
+          q={q}
+          onSearchChange={(e) => setQ(e.target.value)}
+          onSearchClear={() => setQ("")}
+        />
 
-        {/* Selection mode toolbar */}
-        <div className={cn(
-          "absolute inset-0 transition-all duration-300 ease-in-out",
-          !isSelectionMode ? "opacity-0 pointer-events-none translate-y-2" : "opacity-100 translate-y-0"
-        )}>
-          <div className="h-18 md:h-16 bg-surface-container/90 backdrop-blur-md px-4 border-b border-outline-variant/20 shadow-sm flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="icon"
-                onClick={clearSelection}
-                aria-label="Cancel selection"
-                icon={<X className="w-6 h-6" />}
-              />
-
-              <div className="flex flex-col">
-                <span className="text-lg font-medium text-on-surface">
-                  {selectedIds.size} selected
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant="text"
-                onClick={selectAll}
-                className="bg-transparent"
-              >
-                Select All
-              </Button>
-              <Button
-                variant="icon"
-                onClick={handleDelete}
-                disabled={selectedIds.size === 0}
-                title="Delete selected"
-                className="text-error hover:bg-error/10"
-                icon={<Trash2 className="w-6 h-6" />}
-              />
-            </div>
-          </div>
-        </div>
+        <SelectionToolbar
+          isVisible={isSelectionMode}
+          selectedCount={selectedIds.size}
+          onClear={clearSelection}
+          onSelectAll={selectAll}
+          onDelete={handleDelete}
+        />
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 w-full overflow-hidden flex flex-col relative">
         <NoteList
           notes={notesList}
@@ -359,45 +237,19 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           onDelete={handleDelete}
           onLoadMore={handleLoadMore}
         >
-          {/* Header area for search/filters */}
-          <div className="max-w-7xl mx-auto w-full px-4 md:px-6 pt-4 md:pt-6 flex flex-col md:flex-row md:items-center md:justify-end gap-4">
-            {/* Mobile Search */}
-            <div className="md:hidden w-full">
-              <Form method="get" action="/">
-                <SearchBar
-                  className="h-14"
-                  name="q"
-                  value={q}
-                  placeholder="Search notes"
-                  onChange={handleSearch}
-                  onClear={() => setQ("")}
-                />
-              </Form>
-            </div>
-
-
-            <SegmentedButton
-              value={privacy}
-              onChange={setPrivacy}
-              className="w-full md:w-auto"
-              options={[
-                { label: "All", value: "all", icon: <LayoutGrid className="w-4 h-4" /> },
-                { label: "Private", value: "private", icon: <Lock className="w-4 h-4" /> },
-                { label: "Public", value: "public", icon: <Globe className="w-4 h-4" /> },
-              ]}
-            />
-          </div>
+          <HomeHeader.Filters
+            q={q}
+            onSearchChange={(e) => setQ(e.target.value)}
+            onSearchClear={() => setQ("")}
+            privacy={privacy}
+            onPrivacyChange={setPrivacy}
+          />
         </NoteList>
       </div>
 
-      {/* FAB - Mobile Only */}
       {!isSelectionMode && (
         <Link to="/new" className="fixed bottom-7 right-7 z-40 md:hidden">
-          <Button
-            variant="filled"
-            className="h-16 w-16 rounded-2xl bg-primary-container hover:bg-primary-container/80 text-on-primary-container shadow-md hover:shadow-3 flex items-center justify-center p-0"
-            icon={<Plus className="w-8 h-8" />}
-          />
+          <Button variant="filled" className="h-16 w-16 rounded-2xl bg-primary-container text-on-primary-container shadow-md flex items-center justify-center p-0" icon={<Plus className="w-8 h-8" />} />
         </Link>
       )}
     </div>
