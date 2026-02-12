@@ -2,7 +2,7 @@
 
 A secure, edge-based note taking app with Markdown support.
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/YOUR_USERNAME/edge-note)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/kaungkhantjc/edge-note)
 
 > **Note**: This entire application was vibe coded.
 
