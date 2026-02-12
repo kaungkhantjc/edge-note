@@ -1,6 +1,11 @@
+import { createHash, timingSafeEqual } from "node:crypto";
+import { useEffect } from "react";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { Form, redirect, useActionData } from "react-router";
-import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
-import { getSession, commitSession } from "../services/session.server";
+import { Button } from "~/components/ui/Button";
+import { Input } from "~/components/ui/Input";
+import { useUI } from "~/components/ui/UIProvider";
+import { commitSession, getSession } from "../services/session.server";
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
     const env = (context as unknown as { cloudflare: { env: Env } }).cloudflare.env;
@@ -11,16 +16,34 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     return null;
 }
 
+/**
+ * Compares two strings in constant time using hashes to prevent length leaks.
+ */
+function safeCompare(a: string, b: string) {
+    // Prevent potential DoS by setting a reasonable max length (512 chars)
+    // before performing CPU-intensive hashing.
+    if ((a || "").length > 512 || (b || "").length > 512) {
+        return false;
+    }
+
+    // Using a hash ensures we always compare buffers of the same length,
+    // which prevents leaking the length of the secret via timing.
+    const aHash = createHash("sha256").update(a || "").digest();
+    const bHash = createHash("sha256").update(b || "").digest();
+
+    return timingSafeEqual(aHash, bHash);
+}
+
 export async function action({ request, context }: ActionFunctionArgs) {
     const formData = await request.formData();
     const username = formData.get("username") as string;
     const password = formData.get("password") as string;
     const env = (context as unknown as { cloudflare: { env: Env } }).cloudflare.env;
 
-    // Check against env variables
+    // Check against env variables using timing-safe comparison
     if (
-        username === env.AUTH_USERNAME &&
-        password === env.AUTH_PASSWORD
+        safeCompare(username, env.AUTH_USERNAME) &&
+        safeCompare(password, env.AUTH_PASSWORD)
     ) {
         const session = await getSession(request, env);
         session.isLoggedIn = true;
@@ -35,50 +58,54 @@ export async function action({ request, context }: ActionFunctionArgs) {
         });
     }
 
-    return { error: "Invalid credentials" };
+    return { error: "Invalid credentials", _t: Date.now() };
 }
 
 export default function Login() {
     const actionData = useActionData<typeof action>();
+    const { showSnackbar } = useUI();
+
+    useEffect(() => {
+        if (actionData?.error) {
+            showSnackbar(actionData.error);
+        }
+    }, [actionData, showSnackbar]);
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-950">
-            <div className="w-full max-w-md p-8 bg-white dark:bg-gray-900 shadow-lg rounded-lg">
-                <h1 className="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-white">Login</h1>
+        <div className="flex items-center justify-center min-h-screen bg-background p-4">
+            <div className="w-full max-w-110 p-8 lg:p-12">
+
+                {/* Let make icon and title on the same line */}
+                <div className="flex items-center justify-center mb-10 text-center">
+                    <img src="/favicon.svg" alt="Logo" className="size-16 me-4" />
+                    <h1 className="text-3xl font-bold text-on-surface tracking-tight">Edge Note</h1>
+                </div>
+
                 <Form method="post" className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Username
-                        </label>
-                        <input
-                            type="text"
+                    <div className="space-y-5">
+                        <Input
+                            label="Username"
                             name="username"
+                            autoFocus
                             required
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            type="text"
                         />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Password
-                        </label>
-                        <input
-                            type="password"
+                        <Input
+                            label="Password"
                             name="password"
                             required
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            type="password"
                         />
                     </div>
-                    {actionData?.error && (
-                        <div className="text-red-500 dark:text-red-400 text-sm text-center">
-                            {actionData.error}
-                        </div>
-                    )}
-                    <button
+
+                    <Button
                         type="submit"
-                        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors cursor-pointer"
+                        variant="filled"
+                        size="lg"
+                        className="w-full h-14 text-base font-bold mt-4"
                     >
                         Sign In
-                    </button>
+                    </Button>
                 </Form>
             </div>
         </div>

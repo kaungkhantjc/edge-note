@@ -32,7 +32,7 @@ export function NotePublicViewer({ title, content }: NotePublicViewerProps) {
 
             <aside className="hidden lg:block items-center w-72 shrink-0 sticky top-24 h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar">
                 <div className="text-xs font-bold text-primary uppercase tracking-widest mb-4 px-2">Table of Contents</div>
-                <div className="bg-surface-container-low rounded-2xl p-4 w-full">
+                <div className="rounded-2xl p-4 w-full">
                     <MdCatalog editorId="preview-only" scrollElement={scrollElement} theme={resolvedTheme} />
                 </div>
             </aside>

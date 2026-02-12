@@ -1,18 +1,36 @@
 import { eq } from "drizzle-orm";
 import { ArrowLeft, Copy, ExternalLink, Globe, Lock, MoreVertical, Pen, Trash2 } from "lucide-react";
+import React, { useMemo } from "react";
 import { data, Link, redirect, useSubmit } from "react-router";
 import { NotePublicViewer } from "../components/NotePublicViewer";
-import { ButtonGroup } from "../components/ui/ButtonGroup";
+import { ThemeToggle } from "../components/theme-toggle";
 import { AppBar } from "../components/ui/AppBar";
 import { Button } from "../components/ui/Button";
+import { ButtonGroup } from "../components/ui/ButtonGroup";
 import { DropdownItem, DropdownMenu } from "../components/ui/DropdownMenu";
+import { useUI } from "../components/ui/UIProvider";
 import { notes } from "../drizzle/schema";
-import { useResolvedTheme } from "../hooks/useResolvedTheme";
 import { getDB } from "../services/db.server";
 import { requireAuth } from "../services/session.server";
 import type { Route } from "./+types/note-view";
-import { ThemeToggle } from "../components/theme-toggle";
-import { useUI } from "../components/ui/UIProvider";
+
+const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+});
+
+const formatDate = (date: Date | string | number | null) => {
+    if (!date) return "N/A";
+    try {
+        return DATE_FORMATTER.format(new Date(date)).replace(',', '');
+    } catch (e) {
+        return "N/A";
+    }
+};
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data || !data.note) {
@@ -59,12 +77,11 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
 export default function NoteView({ loaderData }: Route.ComponentProps) {
     const { note } = loaderData;
-    const scrollElement = typeof document !== 'undefined' ? document.documentElement : 'html';
-    const resolvedTheme = useResolvedTheme();
-
-    // For manual form submission
     const submit = useSubmit();
-    const { showModal } = useUI();
+    const { showModal, showSnackbar } = useUI();
+
+    const formattedCreatedAt = useMemo(() => formatDate(note.createdAt), [note.createdAt]);
+    const formattedUpdatedAt = useMemo(() => formatDate(note.updatedAt), [note.updatedAt]);
 
     const handleDelete = () => {
         showModal({
@@ -80,7 +97,6 @@ export default function NoteView({ loaderData }: Route.ComponentProps) {
         });
     }
 
-    const { showSnackbar } = useUI();
     const publicUrl = note.slug ? `/s/${note.slug}` : "";
 
     const handleCopyLink = () => {
@@ -92,18 +108,6 @@ export default function NoteView({ loaderData }: Route.ComponentProps) {
     const handleOpenLink = () => {
         window.open(publicUrl, '_blank');
     }
-
-    const formatDate = (date: Date | string | number | null) => {
-        if (!date) return "N/A";
-        return new Date(date).toLocaleString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-        }).replace(',', '');
-    };
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -178,12 +182,12 @@ export default function NoteView({ loaderData }: Route.ComponentProps) {
                 <div className="flex items-center gap-2.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
                     <span className="text-on-surface-variant/70 uppercase tracking-wider font-bold">Created:</span>
-                    <span className="text-on-surface">{formatDate(note.createdAt)}</span>
+                    <span className="text-on-surface">{formattedCreatedAt}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
                     <span className="text-on-surface-variant/70 uppercase tracking-wider font-bold">Updated:</span>
-                    <span className="text-on-surface">{formatDate(note.updatedAt)}</span>
+                    <span className="text-on-surface">{formattedUpdatedAt}</span>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high/50 border border-outline-variant/30 text-on-surface">
                     {note.isPublic ? (

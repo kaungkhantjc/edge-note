@@ -15,6 +15,7 @@ interface NoteListProps {
     containerRef: React.RefObject<HTMLDivElement | null>;
     selection: SelectionResult;
     onDelete?: () => void;
+    onLoadMore: (newNotes: Note[], hasMore: boolean, nextOffset: number) => void;
     children?: React.ReactNode;
 }
 
@@ -23,22 +24,16 @@ const SkeletonCard = () => (
 );
 
 export function NoteList({
-    notes: initialNotes,
-    hasMore: initialHasMore,
-    nextOffset: initialOffset,
+    notes,
+    hasMore,
+    nextOffset: offset,
     containerRef,
     selection,
     onDelete,
+    onLoadMore,
     children
 }: NoteListProps) {
-    const fetcher = useFetcher<any>();
     const navigate = useNavigate();
-    const { showSnackbar } = useUI();
-
-    // State for local accumulation of notes
-    const [notes, setNotes] = useState<Note[]>(initialNotes);
-    const [hasMore, setHasMore] = useState(initialHasMore);
-    const [offset, setOffset] = useState(initialOffset);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
     const sentinelRef = useRef<HTMLDivElement>(null);
@@ -50,29 +45,7 @@ export function NoteList({
         handleMouseDown,
         toggleSelection,
         startSelectionMode,
-        clearSelection,
     } = selection;
-
-    // Reset list when initial notes change (e.g. on search)
-    useEffect(() => {
-        setNotes(initialNotes);
-        setHasMore(initialHasMore);
-        setOffset(initialOffset);
-        setIsError(false);
-    }, [initialNotes, initialHasMore, initialOffset]);
-
-    // Handle fetcher data (for deletion action)
-    useEffect(() => {
-        if (!fetcher.data) return;
-
-        // handle explicit successful deletion action
-        if (fetcher.data.success && fetcher.formData?.get("intent") === "delete_batch") {
-            const deletedCount = fetcher.data.deletedCount || fetcher.formData.getAll("id").length;
-            const deletedIds = new Set(fetcher.formData.getAll("id").map(String));
-            setNotes(prev => prev.filter(n => !deletedIds.has(String(n.id))));
-            showSnackbar(`${deletedCount} notes deleted successfully`);
-        }
-    }, [fetcher.data, fetcher.formData, showSnackbar]);
 
     const fetchMore = useCallback(async () => {
         if (isLoading || !hasMore) return;
@@ -91,7 +64,6 @@ export function NoteList({
             const res = await fetch(`/api-notes?${params.toString()}`);
             if (!res.ok) throw new Error("Failed to fetch");
 
-            // Correctly typecast
             const data = await res.json() as {
                 notes: Note[];
                 hasMore: boolean;
@@ -99,18 +71,7 @@ export function NoteList({
             };
 
             if (data.notes) {
-                const nextBatch = data.notes;
-                const serverHasMore = data.hasMore;
-                const serverNextOffset = data.nextOffset;
-
-                setNotes((prev) => {
-                    const existingIds = new Set(prev.map(n => n.id.toString()));
-                    const uniqueNewNotes = nextBatch.filter((n: Note) => !existingIds.has(n.id.toString()));
-                    return [...prev, ...uniqueNewNotes];
-                });
-
-                setHasMore(serverHasMore);
-                setOffset(serverNextOffset);
+                onLoadMore(data.notes, data.hasMore, data.nextOffset);
             }
         } catch (err) {
             console.error("Infinite scroll error:", err);
@@ -118,7 +79,7 @@ export function NoteList({
         } finally {
             setIsLoading(false);
         }
-    }, [isLoading, hasMore, offset]);
+    }, [isLoading, hasMore, offset, onLoadMore]);
 
     // Intersection Observer for Infinite Scroll
     useEffect(() => {

@@ -1,6 +1,6 @@
 import { and, count, desc, eq, like, or, sql } from "drizzle-orm";
 import { Globe, LayoutGrid, Lock, LogOut, Pen, Plus } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Form, Link, useActionData, useFetcher, useSearchParams, useSubmit } from "react-router";
 import { NoteList } from "../components/NoteList";
 import { ThemeToggle } from "../components/theme-toggle";
@@ -105,10 +105,11 @@ export async function action({ request, context }: Route.ActionArgs) {
     const numberIds = ids.map(id => parseInt(id as string, 10)).filter(id => !isNaN(id));
 
     if (numberIds.length > 0) {
-      // Use raw SQL to bypass D1 parameter limits (max 100)
-      // Safe since we've parsed all IDs to numbers
-      const idsQuery = numberIds.join(",");
-      await db.run(sql.raw(`DELETE FROM notes WHERE id IN (${idsQuery})`));
+      // Use json_each to safely handle a large number of IDs with a single parameter.
+      // This bypasses D1's 100-parameter limit and is safer than string joining.
+      await db.delete(notes).where(
+        sql`id IN (SELECT value FROM json_each(${JSON.stringify(numberIds)}))`
+      );
     }
     return { success: true, deletedCount: numberIds.length };
   }
@@ -123,11 +124,25 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   // Lifted state: Notes accumulation for infinite scroll
   const [notesList, setNotesList] = useState<Note[]>(loaderData.notes);
+  const [hasMore, setHasMore] = useState(loaderData.hasMore);
+  const [nextOffset, setNextOffset] = useState(loaderData.nextOffset);
 
-  // Sync notes when search/loader changes
+  // Sync notes when search/loader changes (e.g. initial load or search query update)
   useEffect(() => {
     setNotesList(loaderData.notes);
-  }, [loaderData.notes]);
+    setHasMore(loaderData.hasMore);
+    setNextOffset(loaderData.nextOffset);
+  }, [loaderData.notes, loaderData.hasMore, loaderData.nextOffset]);
+
+  const handleLoadMore = useCallback((newBatch: Note[], serverHasMore: boolean, serverNextOffset: number) => {
+    setNotesList((prev) => {
+      const existingIds = new Set(prev.map(n => n.id.toString()));
+      const uniqueNewNotes = newBatch.filter((n: Note) => !existingIds.has(n.id.toString()));
+      return [...prev, ...uniqueNewNotes];
+    });
+    setHasMore(serverHasMore);
+    setNextOffset(serverNextOffset);
+  }, []);
 
   // Lifted state: Selection
   const selection = useSelectionMode({
@@ -337,11 +352,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       <div className="flex-1 w-full overflow-hidden flex flex-col relative">
         <NoteList
           notes={notesList}
-          hasMore={loaderData.hasMore}
-          nextOffset={loaderData.nextOffset}
+          hasMore={hasMore}
+          nextOffset={nextOffset}
           containerRef={containerRef}
           selection={selection}
           onDelete={handleDelete}
+          onLoadMore={handleLoadMore}
         >
           {/* Header area for search/filters */}
           <div className="max-w-7xl mx-auto w-full px-4 md:px-6 pt-4 md:pt-6 flex flex-col md:flex-row md:items-center md:justify-end gap-4">
