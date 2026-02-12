@@ -1,7 +1,7 @@
-import React, { useRef, useCallback, useMemo } from "react";
 import { Globe, Lock } from "lucide-react";
-import { cn } from "../lib/utils";
+import React, { useCallback, useMemo, useRef } from "react";
 import { formatDate } from "~/lib/date";
+import { cn } from "../lib/utils";
 
 export interface Note {
     id: string | number;

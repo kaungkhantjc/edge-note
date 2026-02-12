@@ -1,6 +1,6 @@
-import { X, Trash2 } from "lucide-react";
-import { Button } from "./ui/Button";
+import { Trash2, X } from "lucide-react";
 import { cn } from "~/lib/utils";
+import { Button } from "./ui/Button";
 
 interface SelectionToolbarProps {
     isVisible: boolean;

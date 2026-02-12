@@ -1,14 +1,14 @@
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Save } from "lucide-react";
 import { MdEditor } from "md-editor-rt";
 import "md-editor-rt/lib/style.css";
 import { useEffect, useState } from "react";
 import { Form, Link, useSubmit } from "react-router";
-import { AppBar } from "./ui/AppBar";
-import { Button } from "./ui/Button";
 import { useResolvedTheme } from "../hooks/useResolvedTheme";
-import { ThemeToggle } from "./theme-toggle";
 import { cn } from "../lib/utils";
 import { NoteMetadataEditor } from "./NoteMetadataEditor";
+import { ThemeToggle } from "./theme-toggle";
+import { AppBar } from "./ui/AppBar";
+import { Button } from "./ui/Button";
 
 interface NoteEditorLayoutProps {
     title: string;

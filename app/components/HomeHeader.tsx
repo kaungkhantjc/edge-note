@@ -1,11 +1,11 @@
-import { LayoutGrid, Lock, Globe, LogOut, Pen } from "lucide-react";
+import { Globe, LayoutGrid, Lock, LogOut, Pen } from "lucide-react";
 import { Form, Link } from "react-router";
+import { cn } from "~/lib/utils";
+import { ThemeToggle } from "./theme-toggle";
+import { AppBar } from "./ui/AppBar";
+import { Button } from "./ui/Button";
 import { SearchBar } from "./ui/Input";
 import { SegmentedButton } from "./ui/SegmentedButton";
-import { AppBar } from "./ui/AppBar";
-import { ThemeToggle } from "./theme-toggle";
-import { Button } from "./ui/Button";
-import { cn } from "~/lib/utils";
 
 interface HomeHeaderProps {
     isVisible: boolean;

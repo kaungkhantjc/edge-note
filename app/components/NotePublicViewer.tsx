@@ -1,4 +1,3 @@
-import React from "react";
 import { MdCatalog, MdPreview } from "md-editor-rt";
 import "md-editor-rt/lib/preview.css";
 import { useResolvedTheme } from "../hooks/useResolvedTheme";

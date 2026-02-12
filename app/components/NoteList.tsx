@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useSelectionMode } from '../hooks/useSelection';
 import { NoteCard, type Note } from './NoteCard';
-import { NoteListSkeleton } from './NoteListSkeleton';
 import { NoteListEmptyState } from './NoteListEmptyState';
 import { NoteListErrorState } from './NoteListErrorState';
+import { NoteListSkeleton } from './NoteListSkeleton';
 
 type SelectionResult = ReturnType<typeof useSelectionMode>;
 

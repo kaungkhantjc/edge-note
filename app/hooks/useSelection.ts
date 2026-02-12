@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { type Point, type SelectionBox, calculateBox, isIntersecting } from "./use-selection-utils";
 
 interface UseSelectionModeProps<T> {
