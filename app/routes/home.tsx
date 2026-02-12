@@ -14,11 +14,12 @@ import type { Route } from "./+types/home";
 import type { Note } from "../components/NoteCard";
 import { Link } from "react-router";
 import { Button } from "../components/ui/Button";
+import { APP_CONFIG } from "~/config";
 
 export function meta({ }: Route.MetaArgs) {
   return [
-    { title: "Edge Note" },
-    { name: "description", content: "A secure, edge-based note taking app." },
+    { title: APP_CONFIG.name },
+    { name: "description", content: APP_CONFIG.description },
   ];
 }
 

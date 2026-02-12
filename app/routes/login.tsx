@@ -6,6 +6,14 @@ import { Input } from "~/components/ui/Input";
 import { useUI } from "~/components/ui/UIProvider";
 import { safeCompare } from "~/lib/crypto.server";
 import { commitSession, getSession } from "../services/session.server";
+import { APP_CONFIG } from "~/config";
+
+export function meta() {
+    return [
+        { title: `Login - ${APP_CONFIG.name}` },
+        { name: "description", content: `Login to ${APP_CONFIG.name}` },
+    ];
+}
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
     const env = (context as unknown as { cloudflare: { env: Env } }).cloudflare.env;
@@ -59,8 +67,8 @@ export default function Login() {
 
                 {/* Let make icon and title on the same line */}
                 <div className="flex items-center justify-center mb-10 text-center">
-                    <img src="/favicon.svg" alt="Logo" className="size-16 me-4" />
-                    <h1 className="text-3xl font-bold text-on-surface tracking-tight">Edge Note</h1>
+                    <img src="/favicon.svg" alt={APP_CONFIG.name} className="size-16 me-4" />
+                    <h1 className="text-3xl font-bold text-on-surface tracking-tight">{APP_CONFIG.name}</h1>
                 </div>
 
                 <Form method="post" className="space-y-4">

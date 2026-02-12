@@ -1,6 +1,7 @@
 import { Globe, LayoutGrid, Lock, LogOut, Pen } from "lucide-react";
 import { Form, Link } from "react-router";
 import { cn } from "~/lib/utils";
+import { APP_CONFIG } from "~/config";
 import { ThemeToggle } from "./theme-toggle";
 import { AppBar } from "./ui/AppBar";
 import { Button } from "./ui/Button";
@@ -31,9 +32,9 @@ export function HomeHeader({
                 className="bg-surface-container/50 backdrop-blur-xl border-b-0 shadow-sm"
                 title={
                     <div className="flex gap-3 items-center">
-                        <img src="/favicon.svg" alt="Edge Note" className="h-10 w-10" />
+                        <img src="/favicon.svg" alt={APP_CONFIG.name} className="h-10 w-10" />
                         <div className="flex flex-col">
-                            <span className="font-bold text-xl leading-tight tracking-tight text-primary">Edge Note</span>
+                            <span className="font-bold text-xl leading-tight tracking-tight text-primary">{APP_CONFIG.name}</span>
                             <div className="flex items-center gap-1 mt-0.5">
                                 <span className="text-xs font-medium text-on-surface-variant/70 flex items-center gap-1.5">
                                     <span className="w-1 h-1 rounded-full bg-primary/40" />

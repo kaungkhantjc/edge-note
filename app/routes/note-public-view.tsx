@@ -5,13 +5,14 @@ import { AppBar } from "../components/ui/AppBar";
 import { notes } from "../drizzle/schema";
 import { getDB } from "../services/db.server";
 import type { Route } from "./+types/note-public-view";
+import { APP_CONFIG } from "~/config";
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data || !data.note) {
-        return [{ title: "Note Not Found - Edge Note" }];
+        return [{ title: `Note Not Found - ${APP_CONFIG.name}` }];
     }
     return [
-        { title: `${data.note.title} - Edge Note` },
+        { title: `${data.note.title} - ${APP_CONFIG.name}` },
         { name: "description", content: `Public view of: ${data.note.title}` },
     ];
 }
@@ -55,8 +56,8 @@ export default function NotePublicView({ loaderData }: Route.ComponentProps) {
                 className="bg-background/80 backdrop-blur-md px-4"
                 title={
                     <div className="flex gap-3 items-center">
-                        <img src="/favicon.svg" alt="Edge Note" className="h-10 w-10" />
-                        <span className="font-bold text-xl leading-tight tracking-tight text-primary">Edge Note</span>
+                        <img src="/favicon.svg" alt={APP_CONFIG.name} className="h-10 w-10" />
+                        <span className="font-bold text-xl leading-tight tracking-tight text-primary">{APP_CONFIG.name}</span>
                     </div>
                 }
                 endAction={<ThemeToggle />}

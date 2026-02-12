@@ -5,13 +5,14 @@ import { notes } from "../drizzle/schema";
 import { getDB } from "../services/db.server";
 import { requireAuth } from "../services/session.server";
 import type { Route } from "./+types/note-edit";
+import { APP_CONFIG } from "~/config";
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data || !data.note) {
-        return [{ title: "Note Not Found - Edge Note" }];
+        return [{ title: `Note Not Found - ${APP_CONFIG.name}` }];
     }
     return [
-        { title: `Editing: ${data.note.title} - Edge Note` },
+        { title: `Editing: ${data.note.title} - ${APP_CONFIG.name}` },
         { name: "description", content: `Editing note: ${data.note.title}` },
     ];
 }

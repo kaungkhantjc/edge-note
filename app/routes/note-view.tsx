@@ -14,13 +14,14 @@ import { getDB } from "../services/db.server";
 import { requireAuth } from "../services/session.server";
 import type { Route } from "./+types/note-view";
 import { formatDate } from "~/lib/date";
+import { APP_CONFIG } from "~/config";
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data || !data.note) {
-        return [{ title: "Note Not Found - Edge Note" }];
+        return [{ title: `Note Not Found - ${APP_CONFIG.name}` }];
     }
     return [
-        { title: `${data.note.title} - Edge Note` },
+        { title: `${data.note.title} - ${APP_CONFIG.name}` },
         { name: "description", content: `Viewing note: ${data.note.title}` },
     ];
 }
