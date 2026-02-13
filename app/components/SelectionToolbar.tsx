@@ -25,6 +25,7 @@ export function SelectionToolbar({
             <div className="h-18 md:h-16 bg-surface-container/90 backdrop-blur-md px-4 border-b border-outline-variant/20 shadow-sm flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <Button
+                        tabIndex={isVisible ? 0 : -1}
                         variant="icon"
                         onClick={onClear}
                         aria-label="Cancel selection"
@@ -40,6 +41,7 @@ export function SelectionToolbar({
 
                 <div className="flex items-center gap-2">
                     <Button
+                        tabIndex={isVisible ? 0 : -1}
                         variant="text"
                         onClick={onSelectAll}
                         className="bg-transparent"
@@ -47,6 +49,7 @@ export function SelectionToolbar({
                         Select All
                     </Button>
                     <Button
+                        tabIndex={isVisible ? 0 : -1}
                         variant="icon"
                         onClick={onDelete}
                         disabled={selectedCount === 0}

@@ -27,7 +27,7 @@ export function SegmentedButton({
 }: SegmentedButtonProps) {
     return (
         <div className={cn(
-            "inline-flex p-1.5 bg-surface-container rounded-3xl border border-outline-variant/20 shadow-sm",
+            "inline-flex gap-x-1.5 p-1.5 bg-surface-container rounded-3xl border border-outline-variant/20 shadow-sm",
             className
         )}>
             {options.map((option) => {
@@ -37,7 +37,7 @@ export function SegmentedButton({
                         key={option.value}
                         onClick={() => onChange(option.value)}
                         className={cn(
-                            "flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold transition-all duration-300 relative rounded-[20px] flex-1 md:flex-initial",
+                            "flex cursor-pointer items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold transition-all duration-300 relative rounded-[20px] flex-1 md:flex-initial focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                             isSelected
                                 ? "bg-primary text-on-primary scale-[1.02] z-10"
                                 : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface active:scale-95"

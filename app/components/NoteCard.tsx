@@ -1,5 +1,5 @@
 import { Globe, Lock } from "lucide-react";
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { formatDate } from "~/lib/date";
 import { cn } from "../lib/utils";
 
@@ -34,13 +34,26 @@ export const NoteCard = React.memo(function NoteCard({
     // Memoize the formatted date to avoid expensive recalculation
     const formattedDate = useMemo(() => formatDate(note.date), [note.date]);
 
+    useEffect(() => {
+        return () => {
+            if (longPressTimer.current) clearTimeout(longPressTimer.current);
+        };
+    }, []);
+
     const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        // Don't preventDefault here to allow scrolling
         isLongPressing.current = false;
         const touch = e.touches[0];
         touchStartPos.current = { x: touch.clientX, y: touch.clientY };
 
+        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+
         longPressTimer.current = setTimeout(() => {
             isLongPressing.current = true;
+            // Provide haptic feedback if available
+            if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate(40);
+            }
             onLongPress(note);
         }, 500);
     }, [note, onLongPress]);
@@ -50,9 +63,21 @@ export const NoteCard = React.memo(function NoteCard({
             clearTimeout(longPressTimer.current);
             longPressTimer.current = null;
         }
+
         if (isLongPressing.current) {
+            // Prevent the synthesized click event if we just finished a long press
             e.preventDefault();
+            e.stopPropagation();
         }
+        touchStartPos.current = null;
+    }, []);
+
+    const handleTouchCancel = useCallback(() => {
+        if (longPressTimer.current) {
+            clearTimeout(longPressTimer.current);
+            longPressTimer.current = null;
+        }
+        isLongPressing.current = false;
         touchStartPos.current = null;
     }, []);
 
@@ -63,8 +88,8 @@ export const NoteCard = React.memo(function NoteCard({
         const dx = Math.abs(touch.clientX - touchStartPos.current.x);
         const dy = Math.abs(touch.clientY - touchStartPos.current.y);
 
-        // Threshold of 10px jitter
-        if (dx > 10 || dy > 10) {
+        // Increased threshold to 25px to be more forgiving for mobile thumbs
+        if (dx > 25 || dy > 25) {
             clearTimeout(longPressTimer.current);
             longPressTimer.current = null;
             touchStartPos.current = null;
@@ -74,21 +99,33 @@ export const NoteCard = React.memo(function NoteCard({
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
         if (e.button !== 0) return; // Only left click
         isLongPressing.current = false;
+
+        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+
         longPressTimer.current = setTimeout(() => {
             isLongPressing.current = true;
             onLongPress(note);
         }, 500);
     }, [note, onLongPress]);
 
-    const handleMouseUp = useCallback(() => {
+    const handleMouseUp = useCallback((e: React.MouseEvent) => {
         if (longPressTimer.current) {
             clearTimeout(longPressTimer.current);
             longPressTimer.current = null;
         }
+        // If we were long pressing, we should prevent the default click
+        if (isLongPressing.current) {
+            // For mouse, the click event will still fire, handled by handleClick
+        }
     }, []);
 
-    const handleMouseMove = useCallback(() => {
-        if (longPressTimer.current) {
+    const handleMouseMove = useCallback((e: React.MouseEvent) => {
+        if (!longPressTimer.current) return;
+
+        // Minor movement is okay for mouse long press too, but less than touch
+        // Actually for mouse, movement usually means intent to drag or something else
+        // Let's keep it simple: any real move cancels
+        if (Math.abs(e.movementX) > 5 || Math.abs(e.movementY) > 5) {
             clearTimeout(longPressTimer.current);
             longPressTimer.current = null;
         }
@@ -105,11 +142,13 @@ export const NoteCard = React.memo(function NoteCard({
     }, [note, onClick]);
 
     return (
-        <div
+        <button
+            type="button"
             id={`note-card-${note.id}`}
             className={cn(
-                "group relative flex flex-col p-5 h-56 transition-all duration-300 rounded-3xl cursor-pointer overflow-hidden touch-manipulation select-none touch-callout-none",
+                "group relative flex flex-col p-5 h-56 transition-all duration-300 rounded-3xl cursor-pointer overflow-hidden touch-manipulation select-none touch-callout-none text-left",
                 "note-card transition-shadow duration-200",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                 selected
                     ? "bg-secondary-container text-on-secondary-container ring-2 ring-primary border-primary shadow-lg"
                     : "bg-surface-container-high hover:bg-surface-container hover:shadow-md text-on-surface border-none",
@@ -124,6 +163,7 @@ export const NoteCard = React.memo(function NoteCard({
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             onTouchMove={handleTouchMove}
+            onTouchCancel={handleTouchCancel}
         >
             <div className="flex justify-between items-start mb-3 gap-2">
                 <h3 className={cn("font-bold text-lg leading-snug line-clamp-2 transition-colors font-sans tracking-tight", selected ? "text-on-secondary-container" : "text-on-surface")}>
@@ -167,6 +207,6 @@ export const NoteCard = React.memo(function NoteCard({
 
             {/* State Layer (Overlay on hover) */}
             {!selected && <div className="absolute inset-0 bg-on-surface opacity-0 group-hover:opacity-[0.08] pointer-events-none transition-opacity duration-200" />}
-        </div>
+        </button>
     );
 });

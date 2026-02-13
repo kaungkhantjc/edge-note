@@ -66,13 +66,13 @@ export function NoteEditorLayout({
                 className="bg-background/80 backdrop-blur-md px-4"
                 title={title}
                 startAction={
-                    <Link to={backLink} viewTransition>
+                    <Link to={backLink} viewTransition tabIndex={-1}>
                         <Button variant="icon" icon={<ArrowLeft className="w-6 h-6" />} />
                     </Link>
                 }
                 endAction={
                     <div className="flex items-center gap-2 pe-2">
-                        <Link to={backLink} className="hidden md:block" viewTransition>
+                        <Link to={backLink} className="hidden md:block" viewTransition tabIndex={-1}>
                             <Button variant="text">Cancel</Button>
                         </Link>
                         <Button

@@ -47,7 +47,7 @@ export function HomeHeader({
                 endAction={
                     <div className="flex items-center gap-2">
                         <div className="hidden md:flex items-center gap-3 mr-2">
-                            <Link to="/new" viewTransition>
+                            <Link to="/new" viewTransition tabIndex={-1}>
                                 <Button
                                     variant="tonal"
                                     className="rounded-xl h-11 px-4 flex items-center gap-2 font-medium"

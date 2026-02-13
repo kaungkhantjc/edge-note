@@ -101,7 +101,7 @@ export default function NoteView({ loaderData }: Route.ComponentProps) {
                     <span className="font-semibold text-lg">{note.title || "Untitled"}</span>
                 }
                 startAction={
-                    <Link to="/" viewTransition>
+                    <Link to="/" viewTransition tabIndex={-1}>
                         <Button variant="icon" icon={<ArrowLeft className="w-6 h-6" />} />
                     </Link>
                 }
@@ -127,7 +127,7 @@ export default function NoteView({ loaderData }: Route.ComponentProps) {
                                     />
                                 </ButtonGroup>
                             )}
-                            <Link to={`/${note.id}/edit`} viewTransition>
+                            <Link to={`/${note.id}/edit`} viewTransition tabIndex={-1}>
                                 <Button variant="filled" icon={<Pen className="w-4 h-4" />}>Edit</Button>
                             </Link>
                             <Button variant="tonal" size="md" onClick={handleDelete}>Delete</Button>

@@ -20,7 +20,7 @@ export function Button({
     children,
     ...props
 }: ButtonProps) {
-    const baseStyles = "cursor-pointer inline-flex items-center justify-center font-medium transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none active:scale-95";
+    const baseStyles = "cursor-pointer inline-flex items-center justify-center font-medium transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2";
 
     const variants = {
         filled: "bg-primary text-on-primary hover:shadow-md hover:bg-primary/90 rounded-full shadow-sm",
