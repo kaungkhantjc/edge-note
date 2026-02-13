@@ -102,8 +102,21 @@ npx wrangler login
 If you haven't created the database yet:
 
 ```bash
-npx wrangler d1 create edge-note-db
+npx wrangler d1 create edge-note-db --binding=DB --location=apac
 ```
+
+#### Available location hints
+
+D1 supports the following location hints:
+
+| Hint | Hint description |
+|------|------------------|
+| wnam | Western North America |
+| enam | Eastern North America |
+| weur | Western Europe |
+| eeur | Eastern Europe |
+| apac | Asia-Pacific |
+| oc | Oceania |
 
 *Update the `database_id` in `wrangler.jsonc` with the ID returned from this command.*
 
