@@ -111,7 +111,7 @@ export function NoteEditorLayout({
                                 onChange={setContent}
                                 theme={resolvedTheme}
                                 language="en-US"
-                                className="h-full! bg-background!"
+                                className="h-full! bg-background! prose"
                                 preview={isPreviewEnabled}
                                 noPrettier={false}
                                 noUploadImg={true}

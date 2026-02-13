@@ -284,3 +284,309 @@ body {
 .touch-callout-none {
   -webkit-touch-callout: none;
 }
+
+/* Material 3 Expressive Prose Styling */
+.prose {
+  color: var(--color-on-surface);
+  line-height: 1.75;
+  font-size: 1rem;
+}
+
+.prose p {
+  margin-bottom: 1.25rem;
+}
+
+/* Headings */
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  color: var(--color-on-surface) !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  margin-top: 2rem !important;
+  margin-bottom: 1rem !important;
+  letter-spacing: -0.025em !important;
+}
+
+.prose h1 {
+  font-size: 2.25rem !important;
+}
+
+.prose h2 {
+  font-size: 1.875rem !important;
+  border-bottom: 1px solid var(--color-outline-variant) !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.prose h3 {
+  font-size: 1.5rem !important;
+}
+
+.prose h4 {
+  font-size: 1.25rem !important;
+}
+
+/* Lists */
+.prose ul {
+  list-style-type: disc !important;
+  padding-left: 1.625rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.prose ol {
+  list-style-type: decimal !important;
+  padding-left: 1.625rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.prose li {
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+/* Task Lists (Checkboxes) */
+.prose .task-list-item {
+  list-style-type: none !important;
+  padding-left: 0 !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.75rem !important;
+}
+
+.prose .task-list-item-checkbox {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  border: 2px solid var(--color-outline) !important;
+  border-radius: 4px !important;
+  background-color: transparent !important;
+  display: inline-grid !important;
+  place-content: center !important;
+  margin-top: 0.25rem !important;
+  cursor: pointer !important;
+  position: relative !important;
+  flex-shrink: 0 !important;
+}
+
+.prose .task-list-item-checkbox:checked {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.prose .task-list-item-checkbox:checked::before {
+  content: "" !important;
+  width: 0.8rem !important;
+  height: 0.8rem !important;
+  background-color: var(--color-on-primary) !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E") no-repeat center !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E") no-repeat center !important;
+}
+
+.prose .task-list-item-checkbox:disabled {
+  opacity: 0.7 !important;
+  cursor: default !important;
+}
+
+.prose blockquote {
+  margin: 0.5rem 0 !important;
+  padding: 1rem 1.5rem !important;
+  border-left: 4px solid var(--color-outline-variant) !important;
+  background-color: var(--color-surface-container-low) !important;
+  border-radius: 0 12px 12px 0 !important;
+  font-style: normal !important;
+  color: var(--color-on-surface-variant) !important;
+  position: relative !important;
+}
+
+.prose blockquote p:last-child {
+  margin-bottom: 0 !important;
+}
+
+.prose blockquote p strong:first-child,
+.prose blockquote p:first-child {
+  display: block !important;
+}
+
+/* Horizontal Rule */
+.prose hr {
+  margin: 2.5rem 0 !important;
+  border: 0 !important;
+  border-top: 1px solid var(--color-outline-variant) !important;
+}
+
+/* Links */
+.prose a {
+  color: var(--color-primary) !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  transition: opacity 0.2s !important;
+}
+
+.prose a:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+/* Inline Code */
+.prose :not(pre)>code {
+  background-color: var(--color-surface-container-high) !important;
+  color: var(--color-primary) !important;
+  padding: 0.2rem 0.4rem !important;
+  border-radius: 6px !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: 0.875em !important;
+}
+
+/* Table styling for premium look */
+.prose table {
+  border-collapse: collapse !important;
+  margin: 1.5rem 0 !important;
+  overflow: hidden !important;
+}
+
+.prose th {
+  background-color: var(--color-surface-container-high) !important;
+  color: var(--color-on-surface) !important;
+  font-weight: 700 !important;
+  text-align: left !important;
+  padding: 0.75rem 1rem !important;
+}
+
+.prose td {
+  padding: 0.75rem 1rem !important;
+  border-top: 1px solid var(--color-outline-variant) !important;
+}
+
+.prose tr:nth-child(even) {
+  background-color: var(--color-surface-container-low) !important;
+}
+
+/* Images */
+.prose img {
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 4px !important;
+  margin: 2rem auto !important;
+  display: block !important;
+  border: 1px solid var(--color-outline-variant) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .prose {
+    font-size: 0.9375rem !important;
+  }
+
+  .prose h1 {
+    font-size: 1.875rem !important;
+  }
+
+  .prose h2 {
+    font-size: 1.5rem !important;
+  }
+}
+
+/**
+ * Admonition styling
+ */
+
+.prose .md-editor-admonition {
+  background-color: var(--color-surface-container-low) !important;
+  border-radius: 0px !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  color: var(--color-on-surface) !important;
+}
+
+.prose .md-editor-admonition-title {
+  font-weight: 600 !important;
+  font-size: 1.1rem !important;
+  font-family: var(--font-sans) !important;
+}
+
+.prose .md-editor-admonition-note,
+.prose .md-editor-admonition-example {
+  border-color: #076ad8 !important;
+  border-left: 4px solid #076ad8 !important;
+}
+
+.prose .md-editor-admonition-note>.md-editor-admonition-title,
+.prose .md-editor-admonition-example>.md-editor-admonition-title {
+  color: #076ad8 !important;
+}
+
+.prose .md-editor-admonition-abstract,
+.prose .md-editor-admonition-hint {
+  border-color: #07abd8 !important;
+  border-left: 4px solid #07abd8 !important;
+}
+
+.prose .md-editor-admonition-abstract>.md-editor-admonition-title,
+.prose .md-editor-admonition-hint>.md-editor-admonition-title {
+  color: #07abd8 !important;
+}
+
+.prose .md-editor-admonition-info,
+.prose .md-editor-admonition-quote {
+  border-color: #8b8b8b !important;
+  border-left: 4px solid #8b8b8b !important;
+}
+
+.prose .md-editor-admonition-info>.md-editor-admonition-title,
+.prose .md-editor-admonition-quote>.md-editor-admonition-title {
+  color: #8b8b8b !important;
+}
+
+.prose .md-editor-admonition-tip,
+.prose .md-editor-admonition-success {
+  border-color: #20783b !important;
+  border-left: 4px solid #20783b !important;
+}
+
+.prose .md-editor-admonition-tip>.md-editor-admonition-title,
+.prose .md-editor-admonition-success>.md-editor-admonition-title {
+  color: #20783b !important;
+}
+
+.prose .md-editor-admonition-warning,
+.prose .md-editor-admonition-question,
+.prose .md-editor-admonition-caution {
+  border-color: #d89107 !important;
+  border-left: 4px solid #d89107 !important;
+}
+
+.prose .md-editor-admonition-warning>.md-editor-admonition-title,
+.prose .md-editor-admonition-question>.md-editor-admonition-title,
+.prose .md-editor-admonition-caution>.md-editor-admonition-title {
+  color: #d89107 !important;
+}
+
+.prose .md-editor-admonition-danger,
+.prose .md-editor-admonition-failure,
+.prose .md-editor-admonition-bug,
+.prose .md-editor-admonition-error {
+  border-color: #d80707 !important;
+  border-left: 4px solid #d80707 !important;
+}
+
+.prose .md-editor-admonition-danger>.md-editor-admonition-title,
+.prose .md-editor-admonition-failure>.md-editor-admonition-title,
+.prose .md-editor-admonition-bug>.md-editor-admonition-title,
+.prose .md-editor-admonition-error>.md-editor-admonition-title {
+  color: #d80707 !important;
+}
+
+.prose .md-editor-admonition-attention {
+  border-color: #632dc1 !important;
+  border-left: 4px solid #632dc1 !important;
+}
+
+.prose .md-editor-admonition-attention>.md-editor-admonition-title {
+  color: #632dc1 !important;
+}

@@ -22,7 +22,7 @@ export function NotePublicViewer({ title, content }: NotePublicViewerProps) {
                     id="preview-only"
                     value={content}
                     theme={resolvedTheme}
-                    className="bg-transparent"
+                    className="bg-transparent prose"
                     language="en-US"
                     codeTheme="github"
                     previewTheme="github"
