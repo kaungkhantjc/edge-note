@@ -50,6 +50,8 @@ export function useSelectionMode<T>({ items, containerRef, getItemId }: UseSelec
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
         if ((e.target as HTMLElement).closest('.note-card') ||
             (e.target as HTMLElement).closest('button') ||
+            (e.target as HTMLElement).closest('input') ||
+            (e.target as HTMLElement).closest('textarea') ||
             (e.target as HTMLElement).closest('a')) {
             return;
         }

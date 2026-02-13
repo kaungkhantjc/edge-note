@@ -280,3 +280,7 @@ body {
     animation: none !important;
   }
 }
+
+.touch-callout-none {
+  -webkit-touch-callout: none;
+}

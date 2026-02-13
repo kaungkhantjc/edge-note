@@ -117,7 +117,7 @@ export function NoteList({
     return (
         <div className="flex flex-col h-full w-full bg-background text-on-background relative">
             <div
-                className="flex-1 overflow-y-auto select-none relative scroll-smooth"
+                className="flex-1 overflow-y-auto relative scroll-smooth"
                 ref={containerRef}
                 onMouseDown={handleMouseDown}
             >

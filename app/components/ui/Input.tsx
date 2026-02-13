@@ -63,22 +63,38 @@ interface SearchBarProps extends React.InputHTMLAttributes<HTMLInputElement> {
 // Search bar distinct M3 style (Filled, rounded-full)
 export const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
     ({ className, onClear, value, ...props }, ref) => {
+        const internalRef = React.useRef<HTMLInputElement>(null);
+        
+        // Merge refs: use the passed ref if it's a function or object, 
+        // and also use our internalRef for focusing.
+        React.useImperativeHandle(ref, () => internalRef.current!);
+
+        const handleContainerClick = () => {
+            internalRef.current?.focus();
+        };
+
         return (
-            <div className={cn("relative flex items-center w-full h-12 rounded-full bg-surface-container-high hover:bg-surface-container-high/80 transition-colors cursor-text group focus-within:bg-surface-container-high ring-[1.5px] ring-transparent focus-within:ring-primary", className)}>
+            <div 
+                className={cn("relative flex items-center w-full h-12 rounded-full bg-surface-container-high hover:bg-surface-container-high/80 transition-colors cursor-text group focus-within:bg-surface-container-high ring-[1.5px] ring-transparent focus-within:ring-primary", className)}
+                onClick={handleContainerClick}
+            >
                 <div className="pl-4 pr-3 text-on-surface-variant">
                     <SearchIcon className="size-6" />
                 </div>
                 <input
                     type="text"
                     className="flex-1 bg-transparent border-none outline-none text-on-surface placeholder:text-on-surface-variant h-full"
-                    ref={ref}
+                    ref={internalRef}
                     {...props}
                     value={value}
                 />
                 {value && onClear && (
                     <button
                         type="button"
-                        onClick={onClear}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onClear();
+                        }}
                         className="p-2 mr-2 rounded-full hover:bg-on-surface/10 text-on-surface-variant transition-colors"
                     >
                         <XIcon className="size-6" />

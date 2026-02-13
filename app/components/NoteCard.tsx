@@ -29,12 +29,16 @@ export const NoteCard = React.memo(function NoteCard({
 }: NoteCardProps) {
     const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLongPressing = useRef(false);
+    const touchStartPos = useRef<{ x: number, y: number } | null>(null);
 
     // Memoize the formatted date to avoid expensive recalculation
     const formattedDate = useMemo(() => formatDate(note.date), [note.date]);
 
-    const handleTouchStart = useCallback(() => {
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
         isLongPressing.current = false;
+        const touch = e.touches[0];
+        touchStartPos.current = { x: touch.clientX, y: touch.clientY };
+
         longPressTimer.current = setTimeout(() => {
             isLongPressing.current = true;
             onLongPress(note);
@@ -49,12 +53,21 @@ export const NoteCard = React.memo(function NoteCard({
         if (isLongPressing.current) {
             e.preventDefault();
         }
+        touchStartPos.current = null;
     }, []);
 
-    const handleTouchMove = useCallback(() => {
-        if (longPressTimer.current) {
+    const handleTouchMove = useCallback((e: React.TouchEvent) => {
+        if (!longPressTimer.current || !touchStartPos.current) return;
+
+        const touch = e.touches[0];
+        const dx = Math.abs(touch.clientX - touchStartPos.current.x);
+        const dy = Math.abs(touch.clientY - touchStartPos.current.y);
+
+        // Threshold of 10px jitter
+        if (dx > 10 || dy > 10) {
             clearTimeout(longPressTimer.current);
             longPressTimer.current = null;
+            touchStartPos.current = null;
         }
     }, []);
 
@@ -95,7 +108,7 @@ export const NoteCard = React.memo(function NoteCard({
         <div
             id={`note-card-${note.id}`}
             className={cn(
-                "group relative flex flex-col p-5 h-56 transition-all duration-300 rounded-3xl cursor-pointer overflow-hidden touch-manipulation select-none",
+                "group relative flex flex-col p-5 h-56 transition-all duration-300 rounded-3xl cursor-pointer overflow-hidden touch-manipulation select-none touch-callout-none",
                 "note-card transition-shadow duration-200",
                 selected
                     ? "bg-secondary-container text-on-secondary-container ring-2 ring-primary border-primary shadow-lg"
