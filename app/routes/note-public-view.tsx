@@ -4,6 +4,8 @@ import { ThemeToggle } from "../components/theme-toggle";
 import { AppBar } from "../components/ui/AppBar";
 import { notes } from "../drizzle/schema";
 import { getDB } from "../services/db.server";
+import { Button } from "../components/ui/Button";
+import { FileText } from "lucide-react";
 import type { Route } from "./+types/note-public-view";
 import { APP_CONFIG } from "~/config";
 
@@ -42,7 +44,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     return {
         note: {
             title: note.title,
-            content: note.content
+            content: note.content,
+            slug: note.slug
         }
     };
 }
@@ -60,7 +63,20 @@ export default function NotePublicView({ loaderData }: Route.ComponentProps) {
                         <span className="font-bold text-xl leading-tight tracking-tight text-primary">{APP_CONFIG.name}</span>
                     </div>
                 }
-                endAction={<ThemeToggle />}
+                endAction={
+                    <div className="flex items-center gap-2">
+                        {note.slug && (
+                            <Button 
+                                variant="tonal" 
+                                icon={<FileText className="w-4 h-4" />}
+                                onClick={() => window.open(`/raw/s/${note.slug}`, '_blank')}
+                            >
+                                <span className="hidden md:inline">Raw</span>
+                            </Button>
+                        )}
+                        <ThemeToggle />
+                    </div>
+                }
             />
 
             <NotePublicViewer title={note.title || "Untitled"} content={note.content} />

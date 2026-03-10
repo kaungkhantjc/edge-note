@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { ArrowLeft, Copy, ExternalLink, Globe, Lock, MoreVertical, Pen, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, Globe, Lock, MoreVertical, Pen, Trash2, FileText } from "lucide-react";
 import { useMemo } from "react";
 import { data, Link, redirect, useSubmit } from "react-router";
 import { NotePublicViewer } from "../components/NotePublicViewer";
@@ -109,20 +109,31 @@ export default function NoteView({ loaderData }: Route.ComponentProps) {
                     <div className="flex items-center gap-2">
                         {/* Desktop Actions */}
                         <div className="hidden md:flex items-center gap-2">
-                            {note.isPublic && note.slug && (
+                            {note.slug && (
                                 <ButtonGroup className="mr-2">
+                                    {note.isPublic && (
+                                        <>
+                                            <Button
+                                                variant="icon"
+                                                icon={<Copy className="w-4 h-4" />}
+                                                title="Copy shareable link"
+                                                onClick={handleCopyLink}
+                                                className="px-6!"
+                                            />
+                                            <Button
+                                                variant="icon"
+                                                icon={<ExternalLink className="w-4 h-4" />}
+                                                title="Open shareable link"
+                                                onClick={handleOpenLink}
+                                                className="px-6!"
+                                            />
+                                        </>
+                                    )}
                                     <Button
                                         variant="icon"
-                                        icon={<Copy className="w-4 h-4" />}
-                                        title="Copy shareable link"
-                                        onClick={handleCopyLink}
-                                        className="px-6!"
-                                    />
-                                    <Button
-                                        variant="icon"
-                                        icon={<ExternalLink className="w-4 h-4" />}
-                                        title="Open shareable link"
-                                        onClick={handleOpenLink}
+                                        icon={<FileText className="w-4 h-4" />}
+                                        title="View Raw"
+                                        onClick={() => window.open(`/raw/s/${note.slug}`, '_blank')}
                                         className="px-6!"
                                     />
                                 </ButtonGroup>
@@ -141,13 +152,20 @@ export default function NoteView({ loaderData }: Route.ComponentProps) {
                                 <Button variant="icon" icon={<Pen className="w-5 h-5" />} />
                             </Link>
                             <DropdownMenu trigger={<Button variant="icon" icon={<MoreVertical className="w-5 h-5" />} />}>
-                                {note.isPublic && note.slug && (
+                                {note.slug && (
                                     <>
-                                        <DropdownItem onClick={handleCopyLink}>
-                                            <Copy className="w-4 h-4 mr-2" /> Copy Link
-                                        </DropdownItem>
-                                        <DropdownItem onClick={handleOpenLink}>
-                                            <ExternalLink className="w-4 h-4 mr-2" /> View Publicly
+                                        {note.isPublic && (
+                                            <>
+                                                <DropdownItem onClick={handleCopyLink}>
+                                                    <Copy className="w-4 h-4 mr-2" /> Copy Link
+                                                </DropdownItem>
+                                                <DropdownItem onClick={handleOpenLink}>
+                                                    <ExternalLink className="w-4 h-4 mr-2" /> View Publicly
+                                                </DropdownItem>
+                                            </>
+                                        )}
+                                        <DropdownItem onClick={() => window.open(`/raw/s/${note.slug}`, '_blank')}>
+                                            <FileText className="w-4 h-4 mr-2" /> View Raw
                                         </DropdownItem>
                                         <div className="h-px bg-outline-variant/30 my-1 mx-2" />
                                     </>
