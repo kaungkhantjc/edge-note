@@ -9,6 +9,7 @@ import { NoteMetadataEditor } from "./NoteMetadataEditor";
 import { ThemeToggle } from "./theme-toggle";
 import { AppBar } from "./ui/AppBar";
 import { Button } from "./ui/Button";
+import { useUI } from "./ui/UIProvider";
 
 interface NoteEditorLayoutProps {
     title: string;
@@ -59,6 +60,14 @@ export function NoteEditorLayout({
         window.addEventListener('resize', checkMobile);
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
+
+    const { showSnackbar } = useUI();
+    
+    useEffect(() => {
+        if (errors?.global) {
+            showSnackbar(errors.global);
+        }
+    }, [errors?.global, showSnackbar]);
 
     return (
         <div className="flex flex-col h-screen bg-background">
